@@ -199,6 +199,7 @@ Item {
             Label { text: "Parent tools"; font.pixelSize: Style.font.subtitle; font.bold: true }
             Label { width: parent.width; text: "Turn controlled mode off first. These tools use Omarchy’s normal setup screens; nothing is installed until you choose it." }
             Action { width: parent.width; text: "Choose default agent…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "agent"}) }
+            Action { width: parent.width; text: "Install or repair Hermes…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "hermes-repair"}) }
             Action { width: parent.width; text: "Set up Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-install"}) }
             Action { width: parent.width; text: "Open Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-launch"}) }
             Label { width: parent.width; text: "Windows apps and browsers need their own controls inside Windows. Shut Windows down before turning Omarchy controls back on."; opacity: 0.65 }

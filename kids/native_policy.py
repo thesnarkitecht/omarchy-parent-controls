@@ -24,7 +24,7 @@ BANNED = (
     'epiphany', 'falkon', 'qutebrowser', 'dillo', 'cog', 'lynx', 'links', 'w3m',
     'discord', 'signal-desktop', 'telegram-desktop', 'slack', 'zoom', 'thunderbird', 'localsend',
     'hermes', 'claude', 'codex', 'copilot', 'crush', 'cursor-agent', 'gemini', 'grok', 'muse', 'omp',
-    'openclaw', 'opencode', 'pi', 'mise', 'uv', 'pip', 'pip3', 'pipx', 'yay', 'paru',
+    'openclaw', 'opencode', 'pi', 'mise', 'uv', 'uvx', 'pip', 'pip3', 'pipx', 'yay', 'paru',
     'pacman', 'pamac', 'flatpak', 'snap', 'docker', 'podman', 'nerdctl', 'npm', 'pnpm', 'yarn',
     'wine', 'wine64', 'wineserver', 'winetricks', 'lutris', 'bottles',
     'qemu-system-x86_64', 'qemu-system-aarch64', 'virtualbox', 'VBoxManage',
@@ -59,6 +59,13 @@ def targets():
         for name in denied:
             p = Path(base) / name
             if p.is_file(): values.add(p.resolve())
+    # The official Hermes installer brings its own package tools. Their
+    # alternate paths must not evade the same denylist as system installers.
+    hermes_root = Path('/opt/omarchy-parent-controls-hermes')
+    if hermes_root.exists():
+        for p in hermes_root.rglob('*'):
+            if p.name in denied and p.is_file() and os.access(p, os.X_OK):
+                values.add(p.resolve())
     for folder in ('/usr/lib/chromium', '/opt/google/chrome', '/usr/lib/firefox', '/opt/brave-bin'):
         root = Path(folder)
         if root.exists():

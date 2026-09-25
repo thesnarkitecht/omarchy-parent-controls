@@ -44,7 +44,7 @@ For an existing local Hermes installation, supply its real ELF executable and mo
 bash install.sh --hermes-binary /opt/hermes-desktop/Hermes --model-host 192.168.1.10 --model-port 11434
 ```
 
-The path/address above are examples; use your actual installation. This plugin does not download a replacement Hermes build. Existing managed configuration is preserved on upgrade.
+The path/address above are examples; use your actual installation. Existing managed Desktop configuration is preserved on upgrade. The separate terminal Hermes integration uses the official upstream installer as described below.
 
 The release builder produces `bootstrap.sh` with an embedded archive checksum. This checks the downloaded archive against the release bootstrap; it is not an independent cryptographic signature. Installing only the QML plugin does **not** install the privileged controls.
 
@@ -56,7 +56,7 @@ Use **Edit** to add related sites to an existing webapp. For example, `https://x
 
 The normal keyboard shortcuts stay loaded. Browser shortcuts open the approved-app launcher, webapp shortcuts pass through the approved-site check, and unavailable app shortcuts show a parent-approval notice. Turning controls off restores their original actions.
 
-**Parent tools**, available with controls off and PIN approval, opens Omarchy’s agent picker or Windows VM setup/launcher. Agent selection does not install every agent: Omarchy installs only what the parent explicitly chooses. The selected default is captured when controls are turned on; the plugin no longer forces the agent shortcut to Hermes Desktop. Home-installed agent runtimes can still be affected by the executable restrictions; a compatible system-owned runtime is required. Windows uses the stock Omarchy installer, with its privileged actions routed through the parent-PIN sudo prompt. Shut Windows down before enabling controls; the Windows guest needs its own parental controls.
+**Parent tools**, available with controls off and PIN approval, opens Omarchy’s agent picker or Windows VM setup/launcher. Agent selection does not install every agent: Omarchy installs only what the parent explicitly chooses. The selected default is captured when controls are turned on; the plugin no longer forces the agent shortcut to Hermes Desktop. When Hermes is selected, installing/upgrading the plugin prepares its official CLI in a root-owned runtime outside the child’s home. Other home-installed agent runtimes can still be affected by the executable restrictions. Windows uses the stock Omarchy installer, with its privileged actions routed through the parent-PIN sudo prompt. Shut Windows down before enabling controls; the Windows guest needs its own parental controls.
 
 Add `https://ollama.com` as a first webapp if desired. Approval is by exact HTTPS host: a redirect or login hosted elsewhere needs a separate approved origin. All approved sites share Chromium's managed allowlist. Site approval does not make the site's own content child-safe.
 
@@ -84,3 +84,11 @@ python3 packaging/build_release.py --repository OWNER/omarchy-parent-controls --
 ```
 
 See [VALIDATION.md](VALIDATION.md) for release gates and recorded evidence. Publishing to GitHub and acceptance into the Omarchy marketplace are separate steps.
+
+## Hermes in the terminal
+
+If Hermes is the selected Omarchy agent, installation and upgrades automatically prepare its CLI using the official upstream shell installer, downloaded with curl and verified against a pinned SHA-256. It runs with `--skip-browser --non-interactive` and a pinned upstream commit. No additional browser or Desktop is installed. Program files and dependencies are under `/opt/omarchy-parent-controls-hermes`; `hermes` is exposed in `/usr/local/bin` and through a symlink in `~/.local/bin`, so the home-directory `noexec` restriction stays in place.
+
+Existing `~/.hermes` settings, credentials and conversations are preserved. The previous CLI launcher is backed up before replacing it. Open a fresh terminal and run `hermes`; if no provider has been configured yet, run `hermes model`. The CLI runs as the logged-in user, never as root.
+
+If you select Hermes later, turn controls off, then use **Parent tools → Install or repair Hermes**. The terminal requests the parent PIN through sudo. This does not change the chosen agent. Return to controlled mode afterward. The same repair is available as `sudo python3 -I /usr/local/lib/omarchy-kids/hermes_install.py`. Program updates require parent authorization; Hermes cannot rewrite its system-owned runtime. Removing parental controls retains the installed Hermes command and family data.

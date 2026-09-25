@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "thesnarkitecht.kids-lockdown",
   "name": "Parent Controls",
-  "version": "0.4.0-beta.3",
+  "version": "0.4.0-beta.4",
   "author": "thesnarkitecht",
   "description": "PIN-protected restrictions on the normal Omarchy desktop",
   "kinds": [

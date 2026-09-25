@@ -154,6 +154,9 @@ def main():
             copy(launcher,saved,0o700)
         copy(SOURCE/'native/hermes-desktop','/usr/local/bin/hermes-desktop',0o755)
         write('/usr/local/share/applications/omarchy-kids-hermes.desktop','[Desktop Entry]\nType=Application\nName=Hermes\nExec=/usr/local/bin/hermes-desktop\nIcon=hermes\nTerminal=false\nCategories=Utility;\n')
+    from hermes_install import selected, ensure
+    if selected(user):
+        ensure(user)
     for name in ('omarchy-kids','omarchy-kids-hermes'):
         owner=pwd.getpwnam(name)
         destinations=['/var/lib/omarchy-kids/data','/var/lib/omarchy-kids/icons'] if name=='omarchy-kids' else ['/var/lib/omarchy-kids/hermes-home']

@@ -24,3 +24,5 @@ The standard Hermes Desktop runs as another locked service account. Its unit has
 - This is not a content filter, screen-time manager, child-monitoring service, or guarantee about approved websites. No browsing activity is sent to the plugin author.
 
 Report suspected bypasses privately to the repository owner. Do not include a parent PIN, credentials, personal files or browser profiles in reports.
+
+The terminal Hermes runtime is installed from a pinned, checksum-verified copy of the official upstream installer. Its browser installation is disabled. Source, native libraries and dependencies are root-owned outside the child home; a symlink exposes the command without making home executable. The official launcher uses an upstream-supported shared payload layout and the child’s existing data directory. Installer binaries bundled in this runtime are included in the controlled-mode denylist. Hermes CLI still runs with the child’s ordinary terminal networking and permissions; this change does not give it the separate managed Desktop network sandbox.
