@@ -22,7 +22,10 @@ class BrowserPolicyTests(unittest.TestCase):
             value = json.loads(target.read_text())
             self.assertEqual(value['URLAllowlist'],
                              ['https://.example.org:8443', 'https://.ollama.com'])
-            self.assertEqual(value['URLBlocklist'], ['*'])
+            self.assertIn('*', value['URLBlocklist'])
+            self.assertIn('chrome://settings', value['URLBlocklist'])
+            self.assertFalse(value['AllowDeletingBrowserHistory'])
+            self.assertEqual(value['PopupsAllowedForUrls'], ['https://example.org:8443','https://ollama.com'])
             self.assertEqual(value['DownloadRestrictions'], 0)
             self.assertEqual(value['DeveloperToolsAvailability'], 2)
 

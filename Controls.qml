@@ -18,6 +18,7 @@ Item {
   property var pending: ({})
   property string requestJson: ""
   property string currentAction: ""
+  property string editingId: ""
   readonly property bool busy: bridge.running
 
   function open(payloadJson) {
@@ -77,6 +78,7 @@ Item {
           root.pending = ({})
           newPin.text = ""; confirmPin.text = ""
           if (root.currentAction === "start") root.close()
+          if (root.currentAction === "parent-tool") root.dismiss()
         }
       } catch (error) {
         root.failed = true
@@ -138,42 +140,68 @@ Item {
             visible: root.page === "home"
             width: parent.width
             spacing: Style.space(16)
-            Label { width: parent.width; text: root.state.active ? "Controlled mode is on" : (root.state.ready ? "Controlled mode is off" : "Finishing account setup"); font.pixelSize: Style.font.subtitle; color: Color.accent }
+            Label { width: parent.width; text: root.state.active ? (root.state.healthy === false ? "Controls need attention" : "Controlled mode is on") : (root.state.ready ? "Controlled mode is off" : "Finishing account setup"); font.pixelSize: Style.font.subtitle; color: Color.accent }
+            Label { visible: root.state.active && root.state.healthy === false; width: parent.width; text: "The last change did not finish. Turn controls off with your PIN to retry restoring normal access."; color: Color.urgent }
             Label { width: parent.width; text: root.state.active ? "Only approved apps and websites. Changes need your PIN." : "All apps and browsing are available. Turn controls on when ready." }
             Action { width: parent.width; text: root.state.active ? "Turn controlled mode off" : "Turn controlled mode on"; selected: true; onClicked: root.approve({action: root.state.active ? "disable-controls" : "enable-controls"}) }
             Row {
               width: parent.width
               Label { width: parent.width - addButton.width; text: "Approved webapps"; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
-              Button { id: addButton; text: "+ Add"; focusable: true; onClicked: { root.page = "webapp"; root.message = ""; appName.text = ""; appUrl.text = ""; appOrigins.text = ""; appName.forceActiveFocus() } }
+              Button { id: addButton; text: "+ Add"; focusable: true; onClicked: { root.editingId = ""; root.page = "webapp"; root.message = ""; appName.text = ""; appUrl.text = ""; appOrigins.text = ""; appName.forceActiveFocus() } }
             }
             Label { visible: root.state.policy.webapps.length === 0; width: parent.width; text: "None yet. Only websites you approve will appear."; opacity: 0.65 }
             Repeater {
               model: root.state.policy.webapps
-              Row {
+              Column {
                 required property var modelData
                 width: content.width
                 spacing: Style.space(8)
+                Row {
+                width: parent.width
+                spacing: Style.space(8)
                 Image { width: Style.space(32); height: width; anchors.verticalCenter: parent.verticalCenter; source: "file:///var/lib/omarchy-kids/icons/" + modelData.id + ".png"; fillMode: Image.PreserveAspectFit }
-                Button { width: parent.width - removeButton.width - Style.space(48); text: modelData.name; focusable: true; onClicked: Quickshell.execDetached(["/usr/local/bin/omarchy-kids-webapp", modelData.id]) }
-                Button { id: removeButton; text: "Remove"; focusable: true; onClicked: root.approve({action: "remove-webapp", id: modelData.id}) }
+                Button { width: parent.width - editButton.width - Style.space(48); text: modelData.name; focusable: true; onClicked: Quickshell.execDetached(["/usr/local/bin/omarchy-kids-webapp", modelData.id]) }
+                Button { id: editButton; text: "Edit"; focusable: true; onClicked: {
+                  root.editingId = modelData.id; appName.text = modelData.name; appUrl.text = modelData.url;
+                  appOrigins.text = modelData.origins.join(", "); root.page = "webapp"; root.message = ""
+                } }
+                }
+                Row {
+                  spacing: Style.space(12)
+                  Button { text: "Clear data…"; focusable: true; onClicked: root.approve({action: "clear-webapp-data", id: modelData.id}) }
+                  Button { text: "Remove"; focusable: true; onClicked: root.approve({action: "remove-webapp", id: modelData.id}) }
+                }
               }
             }
             Label { visible: !root.state.ready && !root.busy; width: parent.width; text: root.state.notice || "Checking setup…"; color: Color.accent }
             Row {
               width: parent.width
               Button { text: "Change parent PIN"; focusable: true; onClicked: { root.page = "change"; root.message = "" } }
+              Button { text: "Parent tools"; focusable: true; onClicked: { root.page = "tools"; root.message = "" } }
             }
           }
           Column {
             visible: root.page === "webapp"
             width: parent.width
             spacing: Style.space(12)
-            Label { text: "Approve a webapp"; font.pixelSize: Style.font.subtitle; font.bold: true }
+            Label { text: root.editingId ? "Edit webapp" : "Approve a webapp"; font.pixelSize: Style.font.subtitle; font.bold: true }
             TextField { id: appName; width: parent.width; placeholderText: "App name"; maximumLength: 60 }
             TextField { id: appUrl; width: parent.width; placeholderText: "https://example.org"; maximumLength: 2048 }
-            Label { width: parent.width; text: "Approval covers this website. Downloads are allowed; other websites need approval."; opacity: 0.65 }
-            TextField { id: appOrigins; width: parent.width; placeholderText: "Extra content / login sites (optional)"; maximumLength: 4096 }
-            Action { width: parent.width; text: "Continue with parent PIN"; onClicked: root.approve({action: "add-webapp", name: appName.text, url: appUrl.text, origins: appOrigins.text}) }
+            Label { width: parent.width; text: "Links can open approved websites. Add related or login sites below, separated by commas. For x.ai → Grok, include https://grok.com."; opacity: 0.65 }
+            TextField { id: appOrigins; width: parent.width; placeholderText: "Related sites · https://example.org"; maximumLength: 4096 }
+            Action { width: parent.width; text: "Continue with parent PIN"; onClicked: root.approve({action: root.editingId ? "edit-webapp" : "add-webapp", id: root.editingId, name: appName.text, url: appUrl.text, origins: appOrigins.text}) }
+            Button { text: "← Back"; focusable: true; onClicked: root.page = "home" }
+          }
+          Column {
+            visible: root.page === "tools"
+            width: parent.width
+            spacing: Style.space(12)
+            Label { text: "Parent tools"; font.pixelSize: Style.font.subtitle; font.bold: true }
+            Label { width: parent.width; text: "Turn controlled mode off first. These tools use Omarchy’s normal setup screens; nothing is installed until you choose it." }
+            Action { width: parent.width; text: "Choose default agent…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "agent"}) }
+            Action { width: parent.width; text: "Set up Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-install"}) }
+            Action { width: parent.width; text: "Open Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-launch"}) }
+            Label { width: parent.width; text: "Windows apps and browsers need their own controls inside Windows. Shut Windows down before turning Omarchy controls back on."; opacity: 0.65 }
             Button { text: "← Back"; focusable: true; onClicked: root.page = "home" }
           }
           Column {
@@ -194,7 +222,7 @@ Item {
             width: parent.width
             spacing: Style.space(12)
             Label { text: "Parent approval"; font.pixelSize: Style.font.subtitle; font.bold: true }
-            Label { width: parent.width; text: "Enter your PIN to approve this change." }
+            Label { width: parent.width; text: root.pending.action === "clear-webapp-data" ? "Clear this webapp’s history, cookies and cached files? This signs it out. Enter your PIN to continue." : "Enter your PIN to approve this change." }
             TextField { id: pin; width: parent.width; password: true; placeholderText: "Parent PIN"; maximumLength: 12; enabled: !root.busy; onAccepted: root.submit() }
             Action { width: parent.width; text: root.busy ? "Working…" : "Approve"; selected: true; onClicked: root.submit() }
             Button { text: "← Back"; enabled: !root.busy; focusable: true; onClicked: { pin.text = ""; root.pending = ({}); root.page = "home" } }

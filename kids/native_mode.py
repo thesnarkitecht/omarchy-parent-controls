@@ -12,12 +12,23 @@ from control import Store
 def run(*args):
     return subprocess.run(list(args),check=True,text=True)
 
+def disable_policy():
+    subprocess.run(['/usr/bin/systemctl','stop','omarchy-kids-policy.service'],
+                   capture_output=True, text=True, timeout=90)
+    # A failed or already inactive unit does not run ExecStop again. Always
+    # reconcile the actual restrictions so retrying off can recover it.
+    from native_policy import remove
+    remove()
+    run('/usr/bin/systemctl','reset-failed','omarchy-kids-policy.service')
+
 def main():
     if os.geteuid() != 0: raise SystemExit(1)
     config=account()
     home=pwd.getpwnam(config['user']).pw_dir
     marker=Path('/etc/omarchy-kids/controlled-on')
     if sys.argv[1] == 'on':
+        from parent_tools import ensure_windows_stopped
+        ensure_windows_stopped()
         marker.touch(mode=0o644)
         run('/usr/bin/python3','-I','/usr/local/lib/omarchy-kids/native-ui.py')
         desktop_entries(Store().read('policy.json'))
@@ -29,10 +40,7 @@ def main():
         # A machine that has never opened Hermes has no transient unit yet.
         if subprocess.run(['/usr/bin/systemctl','is-active','--quiet','omarchy-kids-hermes-desktop.service']).returncode == 0:
             run('/usr/bin/systemctl','stop','omarchy-kids-hermes-desktop.service')
-        run('/usr/bin/systemctl','stop','omarchy-kids-policy.service')
-        result=subprocess.run(['/usr/bin/systemctl','show','--property=Result','--value','omarchy-kids-policy.service'],capture_output=True,text=True,check=True)
-        if result.stdout.strip() != 'success':
-            raise RuntimeError('The system could not finish removing restrictions. Controlled mode was not marked off.')
+        disable_policy()
         marker.unlink(missing_ok=True)
         CHROME_POLICY.unlink(missing_ok=True)
         backup=Path('/var/lib/omarchy-kids-control/native-backup/ui')

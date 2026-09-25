@@ -15,15 +15,19 @@ from native_runtime import account, is_mountpoint, APPS
 
 STATE = Path('/var/lib/omarchy-kids-control')
 BOOT_ID = Path('/proc/sys/kernel/random/boot_id')
+AGENTS = {'pi','omp','opencode','claude','codex','grok','gemini','openclaw',
+          'hermes','copilot','crush','cursor-agent','muse'}
 BANNED = (
     'code', 'cursor',
     'chromium', 'firefox', 'google-chrome', 'google-chrome-stable', 'brave', 'brave-browser',
     'zen-browser', 'vivaldi', 'vivaldi-stable', 'microsoft-edge-stable',
     'epiphany', 'falkon', 'qutebrowser', 'dillo', 'cog', 'lynx', 'links', 'w3m',
     'discord', 'signal-desktop', 'telegram-desktop', 'slack', 'zoom', 'thunderbird', 'localsend',
-    'claude', 'codex', 'copilot', 'crush', 'cursor-agent', 'gemini', 'grok', 'muse', 'omp',
+    'hermes', 'claude', 'codex', 'copilot', 'crush', 'cursor-agent', 'gemini', 'grok', 'muse', 'omp',
     'openclaw', 'opencode', 'pi', 'mise', 'uv', 'pip', 'pip3', 'pipx', 'yay', 'paru',
     'pacman', 'pamac', 'flatpak', 'snap', 'docker', 'podman', 'nerdctl', 'npm', 'pnpm', 'yarn',
+    'wine', 'wine64', 'wineserver', 'winetricks', 'lutris', 'bottles',
+    'qemu-system-x86_64', 'qemu-system-aarch64', 'virtualbox', 'VBoxManage',
 )
 
 
@@ -48,6 +52,9 @@ def targets():
     denied = json.loads(denied_file.read_text()) if denied_file.exists() else BANNED
     if not isinstance(denied, (list,tuple)) or not all(isinstance(x,str) and re.fullmatch(r'[A-Za-z0-9_.+-]+',x) for x in denied):
         raise ValueError('Invalid command denylist')
+    selected_file = STATE / 'approved-agent'
+    selected = selected_file.read_text().strip() if selected_file.exists() else 'hermes'
+    denied = [name for name in denied if name != selected or selected not in AGENTS]
     for base in ('/usr/bin', '/usr/local/bin', '/opt'):
         for name in denied:
             p = Path(base) / name

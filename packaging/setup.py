@@ -141,6 +141,7 @@ def main():
     for name in ('run','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url'):
         copy(SOURCE/'bin'/name,LIB/'run' if name=='run' else Path('/usr/local/bin')/name,0o755)
     copy(SOURCE/'native/pam-pin',LIB/'pam-pin',0o755)
+    copy(SOURCE/'native/windows-pkexec',LIB/'windows-tools/pkexec',0o755)
     copy(SOURCE/'native/omarchy-kids-sudo','/etc/pam.d/omarchy-kids-sudo')
     copy(SOURCE/'packaging/remove.py',LIB/'remove.py')
     copy(SOURCE/'integration/omarchy-kids.desktop',BUNDLE/'integration/omarchy-kids.desktop')
@@ -206,7 +207,7 @@ def main():
     as_user(user,'/usr/bin/xdg-mime','default','omarchy-kids-approved-browser.desktop','x-scheme-handler/http','x-scheme-handler/https')
     environment={**os.environ,'OMARCHY_PATH':'/usr/share/omarchy','XDG_RUNTIME_DIR':'/run/user/'+str(user.pw_uid)}
     as_user(user,'/usr/bin/omarchy','bar','put','thesnarkitecht.kids-lockdown','--after','omarchy.clock',env=environment)
-    print('Parent controls installed. Open Parents in the bar. Keep your PIN private.')
+    print('Parent controls installed. Open the lock icon in the bar. Keep your PIN private.')
 
 def migrate_plugin(user,old_id):
     if old_id==PLUGIN_ID: return

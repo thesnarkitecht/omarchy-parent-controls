@@ -13,7 +13,8 @@ def status():
     value = request("status")
     from native_runtime import configured
     value["native"] = configured()
-    value["active"] = configured() and subprocess.run(
+    value["active"] = configured() and Path('/etc/omarchy-kids/controlled-on').exists()
+    value["healthy"] = not value["active"] or subprocess.run(
         ["/usr/bin/systemctl", "is-active", "--quiet", "omarchy-kids-policy.service"]
     ).returncode == 0
     value["hermes"] = subprocess.run(["/usr/bin/systemctl", "is-active", "--quiet", "omarchy-kids-hermes-desktop.service"]).returncode == 0
@@ -29,18 +30,32 @@ def dispatch(value):
     if action in ('enable-controls', 'disable-controls'):
         request(action, pin=value.get('pin'))
         return {**status(), 'message': 'Controlled mode is ' + ('on.' if action == 'enable-controls' else 'off.')}
-    if action == "add-webapp":
+    if action == 'parent-tool':
+        from parent_tools import launch
+        request('check-pin', pin=value.get('pin'))
+        launch(value.get('tool'))
+        return {'ok':True, 'message':'Opened Omarchy’s parent tool.'}
+    if action in ("add-webapp", "edit-webapp"):
         import re
         state = request("status")["policy"]
         name, url = value.get("name", "").strip(), value.get("url", "").strip()
         key = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32]
         if not key or not key[0].isalpha():
             key = "app-" + key
+        previous = state['webapps']
+        if action == 'edit-webapp':
+            key = value.get('id')
+            if key not in {app['id'] for app in previous}:
+                raise ValueError('This webapp no longer exists.')
+            previous = [app for app in previous if app['id'] != key]
         origins = [origin(url)] + [origin(x.strip()) for x in value.get("origins", "").split(",") if x.strip()]
-        policy = validate_policy({**state, "webapps": [*state["webapps"],
+        policy = validate_policy({**state, "webapps": [*previous,
             {"id": key, "name": name, "url": url, "origins": origins}]})
         request("save", pin=value.get("pin"), policy=policy)
         return {"ok": True, "message": name + " approved.", "policy": policy}
+    if action == 'clear-webapp-data':
+        request(action, pin=value.get('pin'), id=value.get('id'))
+        return {'ok':True, 'message':'Webapp data cleared. Sign in again when you next open it.'}
     if action == "remove-webapp":
         policy = request("status")["policy"]
         policy["webapps"] = [a for a in policy["webapps"] if a["id"] != value.get("id")]

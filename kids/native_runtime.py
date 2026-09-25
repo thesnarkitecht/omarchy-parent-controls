@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import pwd
 import re
+import secrets
 import socket
 import stat
 import subprocess
@@ -38,12 +39,16 @@ def browser_policy(policy):
             # Chrome policy filters use prefix paths, not glob paths. A leading
             # dot restricts matching to this exact host, without subdomains.
             allowed.append('https://.' + p.netloc)
-    value = {'URLBlocklist':['*'], 'URLAllowlist':sorted(set(allowed)),
+    value = {'URLBlocklist':['*', 'chrome://settings', 'chrome://history',
+                            'chrome://extensions', 'chrome://flags'], 'URLAllowlist':sorted(set(allowed)),
              'ExtensionInstallBlocklist':['*'], 'DeveloperToolsAvailability':2,
              'BrowserGuestModeEnabled':False, 'BrowserAddPersonEnabled':False,
              'IncognitoModeAvailability':1, 'DownloadRestrictions':0,
              'DownloadDirectory':str(Path(pwd.getpwnam(account()['user']).pw_dir) / 'Downloads') if configured() else '${HOME}/Downloads', 'PromptForDownloadLocation':False,
-             'DefaultPopupsSetting':2, 'BrowserSignin':0, 'SyncDisabled':True,
+             'DefaultPopupsSetting':2,
+             'PopupsAllowedForUrls':sorted({origin for app in policy['webapps'] for origin in app['origins']}),
+             'AllowDeletingBrowserHistory':False,
+             'BrowserSignin':0, 'SyncDisabled':True,
              'PasswordManagerEnabled':False, 'BackgroundModeEnabled':False}
     CHROME_POLICY.write_text(json.dumps(value))
     CHROME_POLICY.chmod(0o644)
@@ -131,7 +136,11 @@ def launch_webapp(key, caller_uid, policy, url=None):
     display = grant(config['uid'], worker.pw_uid)
     unit = 'omarchy-kids-webapp-' + key
     if subprocess.run(['/usr/bin/systemctl', 'is-active', '--quiet', unit]).returncode == 0:
-        return {'ok': True}
+        if url is None:
+            return {'ok': True}
+        # Chromium's profile singleton forwards this invocation to the running
+        # app. Do not silently discard approved links when its window is open.
+        unit += '-open-' + secrets.token_hex(4)
     entry = next(app for app in policy['webapps'] if app['id'] == key)
     props = {
         'User': 'omarchy-kids', 'Group': 'omarchy-kids', 'RuntimeDirectory': unit,

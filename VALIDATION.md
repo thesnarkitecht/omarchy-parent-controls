@@ -1,6 +1,15 @@
-# Release validation — 0.4.0-beta.2
+# Release validation — 0.4.0-beta.3
 
 Community beta tested September 25, 2026 on Arch Linux ARM, Omarchy 4.0.3, kernel 7.2.6. The existing desktop account is the controlled account. This is a supervised-rollout release, not a claim of comprehensive security or compatibility.
+
+## Parent interface update — beta.3
+
+- 53 unit/package tests cover the inherited protections, recovery from incomplete mode changes, PIN checks before resetting data, exact related-site approvals, approved-link forwarding to running webapps, shortcut migration, and the restricted Windows elevation adapter.
+- The core beta.3 candidate was installed in the ARM VM. A normal Chromium window rendered a test page immediately after switching controls off, without rebooting. Re-enabling controls passed the terminal/network/browser/install/download guard checks.
+- Hyprland reloaded without configuration errors. Browser and Grok shortcuts remained present with approved actions; default keyboard bindings are loaded again.
+- Quickshell loaded the updated components; the native panel and lock icon were visually reviewed.
+- From the actual Ollama webapp, Ctrl+Shift+Delete opened `chrome://settings/clearBrowserData` and displayed “This page is blocked.” The PIN-authorized reset path successfully removed a disposable browser profile without touching family profiles.
+- The additional Windows-running preflight and elevation adapter have unit coverage. A Windows guest was not installed or launched in the ARM VM. Agent runtimes installed in writable home directories remain subject to the executable restrictions.
 
 ## Launcher update — beta.2
 

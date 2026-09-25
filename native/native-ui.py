@@ -8,6 +8,7 @@ import subprocess
 import pwd
 sys.path.insert(0,"/usr/local/lib/omarchy-kids")
 from native_runtime import account
+from native_policy import AGENTS
 config = account()
 
 def read_user(path):
@@ -17,6 +18,11 @@ def write_user(path, text):
     subprocess.run(["/usr/bin/runuser", "-u", config["user"], "--", "/usr/bin/tee", str(path)], input=text, text=True, stdout=subprocess.DEVNULL, check=True)
 
 home = Path(pwd.getpwnam(config['user']).pw_dir)
+default_agent = home / '.config/omarchy/defaults/agent'
+selected_agent = read_user(default_agent).strip() if default_agent.exists() else ''
+if selected_agent not in AGENTS: selected_agent = ''
+# Activation is PIN-authorized; capture the parent's normal Omarchy choice.
+Path('/var/lib/omarchy-kids-control/approved-agent').write_text(selected_agent + '\n')
 base = Path('/usr/local/share/omarchy-kids/bundle')
 apps = Path('/usr/local/share/omarchy-kids/applications')
 apps.mkdir(parents=True, exist_ok=True)
@@ -26,7 +32,11 @@ for folder in (Path('/usr/share/applications'), Path('/usr/local/share/applicati
         for item in folder.glob('*.desktop'):
             (apps / item.name).write_text('[Desktop Entry]\nType=Application\nName=Unavailable\nHidden=true\nNoDisplay=true\n')
 hermes_entry = Path('/usr/local/share/applications/omarchy-kids-hermes.desktop')
-if config.get('hermes_binary') and hermes_entry.exists(): shutil.copyfile(hermes_entry, apps / hermes_entry.name)
+if selected_agent == 'hermes' and config.get('hermes_binary') and hermes_entry.exists(): shutil.copyfile(hermes_entry, apps / hermes_entry.name)
+if selected_agent:
+    (apps / 'omarchy-kids-agent.desktop').write_text('[Desktop Entry]\nType=Application\nName=AI agent\nExec=/usr/bin/omarchy agent\nIcon=utilities-terminal\nTerminal=false\n')
+else:
+    (apps / 'omarchy-kids-agent.desktop').unlink(missing_ok=True)
 shutil.copyfile(base / 'integration/omarchy-kids.desktop', apps / 'omarchy-kids.desktop')
 handler = Path('/usr/local/share/applications/omarchy-kids-approved-browser.desktop')
 if handler.exists(): shutil.copyfile(handler, apps / handler.name)
@@ -49,28 +59,25 @@ hidden = ('trigger.share', 'setup.default.agent', 'setup.default.browser',
           'setup.security.touch-id', 'setup.plugin', 'style.unlock', 'setup.webapp')
 entries = {key: {'when': 'false'} for key in ids if key.split('.')[0] not in allowed_roots or any(key == x or key.startswith(x+'.') for x in hidden)}
 entries['parents'] = {'label':'Parent controls','icon':'','action':'/usr/local/bin/omarchy-kids'}
-if config.get('hermes_binary'):
+if selected_agent == 'hermes' and config.get('hermes_binary'):
     entries['hermes'] = {'label':'Hermes Desktop','icon':'','iconFont':'omarchy','action':'hermes-desktop'}
+if selected_agent:
+    entries['agent'] = {'label':'AI agent · '+selected_agent,'icon':'','iconFont':'omarchy','action':'omarchy agent'}
 write_user(menu_path, json.dumps(entries, indent=2) + '\n')
-# Omarchy's documented toggle keeps all core window-management/media bindings.
+# Keep all stock shortcuts; replace restricted actions below.
 hypr = home / '.config/hypr/hyprland.lua'
 text = read_user(hypr)
 if not (backup / 'hyprland.lua').exists(): (backup / 'hyprland.lua').write_text(text)
-if '\nomarchy_preinstalled_bindings = false\n' not in text:
-    text = text.replace('-- Load Omarchy defaults.', 'omarchy_preinstalled_bindings = false\nomarchy_default_bindings = false\n\n-- Load Omarchy defaults.')
-    text = text.replace('require("default.hypr.omarchy")', 'require("default.hypr.omarchy")\nrequire("default.hypr.bindings.media")\nrequire("default.hypr.bindings.clipboard")\nrequire("default.hypr.bindings.tiling")\nrequire("default.hypr.bindings.utilities")')
+from shortcut_policy import restore_default_loading, overrides
+text = restore_default_loading(text)
 write_user(hypr, text)
-# The utilities module includes the generic agent picker; replace that binding.
+# Use Omarchy's selected default agent instead of forcing Hermes Desktop.
 bindings = home / '.config/hypr/bindings.lua'
 if not (backup / 'bindings.lua').exists(): (backup / 'bindings.lua').write_text(read_user(bindings))
 bindings_text = read_user(bindings).split('-- Kids account bindings')[0]
-write_user(bindings, bindings_text + '''\n-- Kids account bindings
-hl.unbind("SUPER + SHIFT + CTRL + A")
-o.bind("SUPER + SHIFT + CTRL + A", "Hermes Desktop", "hermes-desktop")
-o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
-o.bind("SUPER + SHIFT + F", "Files", { omarchy = "nautilus" })
-o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
-''')
+stock_bindings_file = Path('/usr/share/omarchy/default/hypr/bindings/applications.lua')
+stock_bindings = stock_bindings_file.read_text() if stock_bindings_file.exists() else ''
+write_user(bindings, bindings_text + overrides(stock_bindings, bindings_text))
 # Hide the generic agent picker; standard Hermes Desktop has its own launcher.
 shell = home / '.config/omarchy/shell.json'
 state = json.loads(read_user(shell))

@@ -70,10 +70,17 @@ class Store:
             return {"policy": self.read("policy.json"), "catalog": {
                 key: {**app, "installed": Path(app["binary"]).is_file()} for key, app in CATALOG.items()
             }}
-        if action not in ("save", "change-pin", "check-pin", "enable-controls", "disable-controls"):
+        if action not in ("save", "change-pin", "check-pin", "enable-controls", "disable-controls", "clear-webapp-data"):
             raise ValueError("Unknown action.")
         self.authenticate(req.get("pin"))
         if action == "check-pin":
+            return {}
+        if action == 'enable-controls':
+            from parent_tools import ensure_windows_stopped
+            ensure_windows_stopped()
+        if action == 'clear-webapp-data':
+            from webapp_data import clear
+            clear(req.get('id'), self.read('policy.json'))
             return {}
         if action == "save":
             policy = validate_policy(req.get("policy"))

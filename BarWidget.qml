@@ -6,18 +6,17 @@ import qs.Ui
 BarWidget {
   id: root
   moduleName: "thesnarkitecht.kids-lockdown"
-  implicitWidth: label.implicitWidth + 20
-  implicitHeight: label.implicitHeight + 12
-  Text {
-    id: label
-    anchors.centerIn: parent
-    text: "Parents"
-    color: Color.foreground
-    font.family: Style.font.family
-    font.pixelSize: Style.font.body
-  }
-  MouseArea {
+  implicitWidth: lockButton.implicitWidth
+  implicitHeight: lockButton.implicitHeight
+  BarIconButton {
+    id: lockButton
     anchors.fill: parent
-    onClicked: Quickshell.execDetached(["/usr/local/bin/omarchy-kids"])
+    bar: root.bar
+    text: ""
+    tooltipText: "Parent controls"
+    Accessible.name: "Parent controls"
+    onPressed: function(button) {
+      if (button === Qt.LeftButton) Quickshell.execDetached(["/usr/local/bin/omarchy-kids"])
+    }
   }
 }

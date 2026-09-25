@@ -27,7 +27,7 @@ This is a set of practical guardrails for young children who know their login pa
 The version-pinned installer verifies the archive's SHA-256 before extracting it:
 
 ```bash
-curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.4.0-beta.2/bootstrap.sh | bash
+curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.4.0-beta.3/bootstrap.sh | bash
 ```
 
 Download and extract the published release, verify its SHA-256 checksum, and run:
@@ -50,7 +50,13 @@ The release builder produces `bootstrap.sh` with an embedded archive checksum. T
 
 ## Parent controls
 
-Open **Parents** in the bar. Turn controlled mode off/on, add or remove a webapp, or change the PIN. Each change asks for the PIN. Turning mode off restores the normal app/menu access and refreshes the launcher so all previously visible installed apps reappear; Parents stays available for quickly turning it back on. Switching modes never installs or uninstalls applications. Approved webapps appear in the launcher immediately after approval, in either mode.
+Open the **lock icon** in the bar. Turn controlled mode off/on, add or remove a webapp, or change the PIN. Each change asks for the PIN. Turning mode off restores the normal app/menu access and refreshes the launcher so all previously visible installed apps reappear; Parents stays available for quickly turning it back on. Switching modes never installs or uninstalls applications. Approved webapps appear in the launcher immediately after approval, in either mode.
+
+Use **Edit** to add related sites to an existing webapp. For example, `https://x.ai` and `https://grok.com` are separate approvals; include both to follow the Grok button. Approved sites may open new windows, while other destinations remain blocked. **Clear data…** requires the parent PIN and resets that webapp’s history, cookies and cache, signing it out.
+
+The normal keyboard shortcuts stay loaded. Browser shortcuts open the approved-app launcher, webapp shortcuts pass through the approved-site check, and unavailable app shortcuts show a parent-approval notice. Turning controls off restores their original actions.
+
+**Parent tools**, available with controls off and PIN approval, opens Omarchy’s agent picker or Windows VM setup/launcher. Agent selection does not install every agent: Omarchy installs only what the parent explicitly chooses. The selected default is captured when controls are turned on; the plugin no longer forces the agent shortcut to Hermes Desktop. Home-installed agent runtimes can still be affected by the executable restrictions; a compatible system-owned runtime is required. Windows uses the stock Omarchy installer, with its privileged actions routed through the parent-PIN sudo prompt. Shut Windows down before enabling controls; the Windows guest needs its own parental controls.
 
 Add `https://ollama.com` as a first webapp if desired. Approval is by exact HTTPS host: a redirect or login hosted elsewhere needs a separate approved origin. All approved sites share Chromium's managed allowlist. Site approval does not make the site's own content child-safe.
 

@@ -13,6 +13,9 @@ def launch(caller_uid):
     child = account()
     if caller_uid != child['uid']:
         raise ValueError('Hermes must be launched from the configured desktop account.')
+    selected = Path('/var/lib/omarchy-kids-control/approved-agent')
+    if selected.exists() and selected.read_text().strip() != 'hermes':
+        raise ValueError('Hermes is not the parent-selected agent.')
     if not Path('/etc/omarchy-kids/controlled-on').exists():
         raise ValueError('Use the normal Hermes launcher when controlled mode is off.')
     if subprocess.run(['/usr/bin/systemctl', 'is-active', '--quiet', UNIT]).returncode == 0:

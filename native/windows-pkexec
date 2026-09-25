@@ -1,0 +1,13 @@
+#!/usr/bin/python3 -I
+"""Adapt only Omarchy Windows's validated privileged operations to parent sudo."""
+import os
+from pathlib import Path
+import sys
+
+args = sys.argv[1:]
+if Path('/etc/omarchy-kids/controlled-on').exists():
+    raise SystemExit('Turn controlled mode off before managing Windows.')
+if (len(args) < 3 or args[:2] != ['/usr/bin/omarchy-windows-vm', '__priv']
+        or args[2] not in ('write_compose','up','up_wait','down','status','remove')):
+    raise SystemExit('This adapter only supports Omarchy Windows actions.')
+os.execv('/usr/bin/sudo', ['sudo','--','/usr/bin/env','PKEXEC_UID='+str(os.getuid()),*args])
