@@ -4,7 +4,7 @@ Community beta tested September 25, 2026 on Arch Linux ARM, Omarchy 4.0.3, kerne
 
 ## Hermes CLI repair — beta.4 candidate
 
-The new official-installer integration is awaiting a parent-authorized live installation test. Do not treat this candidate as a validated release. All 59 automated tests pass against the extracted candidate on the Arch Linux ARM VM; local macOS testing passes 58 with the Linux-only bootstrap test skipped. Coverage includes installer checksum rejection before execution, fixed upstream commit and browser opt-out, keeping user data separate from the program runtime, backing up an existing command, and requiring privilege for repair.
+The official pinned installer completed in the ARM VM, and both its version/help commands and an interactive CLI prompt work as the child. All 62 automated tests pass on the ARM VM. The runtime-command policy update is awaiting a parent-authorized on/off validation; do not treat this candidate as a validated release. Coverage includes installer checksum rejection before execution, fixed upstream commit and browser opt-out, keeping user data separate from the program runtime, backing up an existing command, and requiring privilege for repair.
 
 The VM's previous custom system installation already answered `hermes --version`; that is not evidence that the new official installer or a fresh machine works. Required live acceptance: clean official runtime installation, real terminal startup in both modes, existing browser/installer guards, and preservation of the child's Hermes configuration.
 

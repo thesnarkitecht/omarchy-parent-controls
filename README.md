@@ -11,7 +11,7 @@ Keep the normal Omarchy desktop, with parent-approved webapps and a private pare
 - Chromium webapps for the exact HTTPS sites a parent approves. Downloads go to the child's Downloads folder.
 - The installed, unmodified Hermes Desktop, when configured with a supported local model endpoint.
 
-Normal terminal network requests work. Known browser-download hosts are blocked. General browsers, other AI launchers, communication apps and package installers are hidden or denied. Downloaded native executables cannot run from the common writable directories covered by the policy.
+Normal terminal network requests work. Known browser-download hosts are blocked. General browsers, other AI launchers, communication apps and system package installers are hidden or denied. Runtime commands (`mise`, `uv`/`uvx`, `pip`/`pipx`, `npm`/`npx`, `pnpm`, and `yarn`) are allowed, including after upgrading older denylist settings. Downloaded native executables cannot run from the common writable directories covered by the policy.
 
 This is a set of practical guardrails for young children who know their login password. A terminal with networking remains powerful. Read [SECURITY.md](SECURITY.md) for the limits.
 

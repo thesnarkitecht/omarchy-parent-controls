@@ -183,7 +183,7 @@ def main():
     write('/etc/systemd/system/omarchy-kids-rollback.service','[Unit]\nDescription=Recover unconfirmed parent-controls setup\nConditionPathExists=!/etc/omarchy-kids/native-confirmed\n[Service]\nType=oneshot\nExecStart=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/remove.py --recovery\n')
     write('/etc/systemd/system/omarchy-kids-rollback.timer','[Unit]\nDescription=Recover unconfirmed parent-controls setup\n[Timer]\nOnActiveSec=15min\n[Install]\nWantedBy=timers.target\n')
     from control import Store
-    from native_policy import BANNED
+    from native_policy import BANNED, RUNTIME_COMMANDS
     fresh=not (STATE/'pin.json').exists()
     new_pin=None
     if fresh:
@@ -191,7 +191,7 @@ def main():
         if new_pin != getpass.getpass('Repeat parent PIN: '): raise ValueError('PINs did not match.')
         Store().initialize(new_pin)
     denied=json.loads((ETC/'denied-commands.json').read_text()) if (ETC/'denied-commands.json').exists() else []
-    write(ETC/'denied-commands.json',json.dumps(sorted(set(BANNED)|set(denied)),indent=2)+'\n')
+    write(ETC/'denied-commands.json',json.dumps(sorted((set(BANNED)|set(denied))-RUNTIME_COMMANDS),indent=2)+'\n')
     run('/usr/bin/systemctl','daemon-reload')
     run('/usr/bin/systemctl','enable','--now','omarchy-kids-control.service')
     run('/usr/bin/systemctl','restart','omarchy-kids-control.service')
