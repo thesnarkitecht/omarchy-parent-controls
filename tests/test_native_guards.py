@@ -12,7 +12,7 @@ import managed_hermes
 
 class Guards(unittest.TestCase):
     def test_busy_bind_restores_flags_without_hiding_nested_mounts(self):
-        with patch.object(native_policy.os.path,'ismount',return_value=True),patch.object(native_policy,'command') as command,patch.object(native_policy.subprocess,'run',return_value=SimpleNamespace(returncode=32)):
+        with patch.object(native_policy,'is_mountpoint',return_value=True),patch.object(native_policy,'command') as command,patch.object(native_policy.subprocess,'run',return_value=SimpleNamespace(returncode=32)):
             self.assertFalse(native_policy.release_mount('/home/child',['exec','nosuid','dev']))
             command.assert_called_once_with(['/usr/bin/mount','-o','remount,bind,exec,nosuid,dev','/home/child'])
 

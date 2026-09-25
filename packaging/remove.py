@@ -60,6 +60,7 @@ def main():
     for path in Path('/etc/systemd/system').glob('omarchy-kids-*.service'): path.unlink()
     unlink('/etc/systemd/system/omarchy-kids-rollback.timer')
     unlink('/etc/systemd/system/display-manager.service.d/omarchy-kids.conf')
+    unlink('/etc/systemd/system/user@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf')
     unlink('/etc/systemd/system/user-runtime-dir@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf')
     unlink('/etc/pacman.d/hooks/95-omarchy-kids.hook')
     unlink('/etc/pam.d/omarchy-kids-sudo')
@@ -86,6 +87,8 @@ def main():
         launcher.chmod(0o755)
     for name in ('omarchy-kids.desktop','omarchy-kids-approved-browser.desktop','omarchy-kids-hermes.desktop'):
         unlink('/usr/local/share/applications/'+name)
+    for path in Path('/usr/local/share/applications/omarchy-kids').glob('webapp-*.desktop'):
+        path.unlink()
     run('/usr/bin/runuser','-u',user.pw_name,'--','/usr/bin/rm','-rf','--',str(Path(user.pw_dir)/'.config/omarchy/plugins/thesnarkitecht.kids-lockdown'))
     for scheme in ('http','https'):
         run('/usr/bin/runuser','-u',user.pw_name,'--','/usr/bin/xdg-mime','default',saved.get('handlers',{}).get(scheme,'chromium.desktop'),'x-scheme-handler/'+scheme,check=False)

@@ -115,7 +115,7 @@ def main():
             except KeyError: pass
             else: raise ValueError('Refusing to reuse an unrelated service account: '+name)
     packages=['python','pyside6','acl','nftables','chromium']
-    if not args.skip_apps:
+    if not args.skip_apps and not previous:
         packages += ['gnome-calculator','papers','file-roller','gnome-text-editor']
     run('/usr/bin/pacman','-S','--needed','--noconfirm',*packages)
     ETC.mkdir(parents=True,exist_ok=True)
@@ -134,7 +134,7 @@ def main():
     for name in ('omarchy-kids','omarchy-kids-hermes'):
         run('/usr/bin/usermod','--lock','--groups','','--shell','/usr/bin/nologin',name)
     write(ETC/'account.json',json.dumps(config)+'\n')
-    for path in (LIB,BUNDLE/'native',BUNDLE/'integration',Path('/usr/local/share/omarchy-kids/applications'),Path('/etc/chromium/policies/managed')):
+    for path in (LIB,BUNDLE/'native',BUNDLE/'integration',Path('/usr/local/share/omarchy-kids/applications'),Path('/usr/local/share/applications/omarchy-kids'),Path('/etc/chromium/policies/managed')):
         path.mkdir(parents=True,exist_ok=True)
     for item in (SOURCE/'kids').glob('*.py'): copy(item,LIB/item.name)
     copy(SOURCE/'native/native-ui.py',LIB/'native-ui.py')
@@ -168,6 +168,9 @@ def main():
     for label,operation in [('enable','on'),('disable','off')]:
         write('/etc/systemd/system/omarchy-kids-'+label+'.service','[Unit]\nDescription=Omarchy parent controls '+operation+'\n[Service]\nType=oneshot\nExecStart=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/native_mode.py '+operation+'\n')
     write('/etc/systemd/system/display-manager.service.d/omarchy-kids.conf','[Unit]\nWants=omarchy-kids-policy.service\nAfter=omarchy-kids-policy.service\n[Service]\nExecStartPre=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/boot_guard.py\n')
+    # Omarchy can start through a TTY/UWSM or a lingering user manager, without
+    # a display manager. Gate the actual child's user manager in every case.
+    write('/etc/systemd/system/user@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf','[Unit]\nWants=omarchy-kids-policy.service\nAfter=omarchy-kids-policy.service\n[Service]\nExecStartPre=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/boot_guard.py\n')
     runtime_dropin=Path('/etc/systemd/system/user-runtime-dir@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf')
     if runtime_dropin.exists() and 'ExecStartPost=/usr/bin/mount -o remount,noexec' in runtime_dropin.read_text():
         # Migrate the development build's unconditional runtime restriction.

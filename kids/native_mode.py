@@ -54,5 +54,15 @@ def main():
         run('/usr/bin/runuser','-u',config['user'],'--','/usr/bin/env',
             'XDG_RUNTIME_DIR='+runtime,'HYPRLAND_INSTANCE_SIGNATURE='+instances[0].parent.name,
             '/usr/bin/hyprctl','reload')
+        # Mounting/unmounting the controlled applications folder leaves existing
+        # inotify watches attached to the old directory. Reconnect the shell's
+        # app provider after the transition; running applications stay open.
+        environment = ['/usr/bin/runuser','-u',config['user'],'--','/usr/bin/env',
+                       'OMARCHY_PATH=/usr/share/omarchy','XDG_RUNTIME_DIR='+runtime,
+                       'DBUS_SESSION_BUS_ADDRESS=unix:path='+runtime+'/bus',
+                       'HYPRLAND_INSTANCE_SIGNATURE='+instances[0].parent.name]
+        if subprocess.run(environment + ['/usr/bin/omarchy','shell','shell','ping'],
+                          capture_output=True, timeout=5).returncode == 0:
+            run(*environment, '/usr/bin/omarchy','restart','shell')
 
 if __name__ == '__main__': main()

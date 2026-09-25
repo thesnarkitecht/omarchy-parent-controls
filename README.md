@@ -19,7 +19,7 @@ This is a set of practical guardrails for young children who know their login pa
 
 - Omarchy 4 on Arch Linux with systemd, a standard `/home/NAME` desktop account, and working administrator access for initial setup.
 - One controlled desktop account per computer. Existing PIN and website approvals survive updates.
-- Python, PySide6, Chromium, nftables and ACL tools; the installer installs these through pacman. It also installs Calculator, Papers, File Roller and Text Editor unless `--skip-apps` is supplied.
+- Python, PySide6, Chromium, nftables and ACL tools; the installer installs these through pacman. First installation also installs Calculator, Papers, File Roller and Text Editor unless `--skip-apps` is supplied. Updates preserve the existing app set.
 - Managed Hermes currently requires a root-owned upstream desktop binary and an existing local model server reachable by a fixed IP/port. Cloud-provider-only Hermes setups are not supported by this release.
 
 ## Install from a reviewed release
@@ -27,7 +27,7 @@ This is a set of practical guardrails for young children who know their login pa
 The version-pinned installer verifies the archive's SHA-256 before extracting it:
 
 ```bash
-curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.4.0-beta.1/bootstrap.sh | bash
+curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.4.0-beta.2/bootstrap.sh | bash
 ```
 
 Download and extract the published release, verify its SHA-256 checksum, and run:
@@ -50,11 +50,11 @@ The release builder produces `bootstrap.sh` with an embedded archive checksum. T
 
 ## Parent controls
 
-Open **Parents** in the bar. Turn controlled mode off/on, add or remove a webapp, or change the PIN. Each change asks for the PIN. Turning mode off restores the normal app/menu access; Parents stays available for quickly turning it back on.
+Open **Parents** in the bar. Turn controlled mode off/on, add or remove a webapp, or change the PIN. Each change asks for the PIN. Turning mode off restores the normal app/menu access and refreshes the launcher so all previously visible installed apps reappear; Parents stays available for quickly turning it back on. Switching modes never installs or uninstalls applications. Approved webapps appear in the launcher immediately after approval, in either mode.
 
 Add `https://ollama.com` as a first webapp if desired. Approval is by exact HTTPS host: a redirect or login hosted elsewhere needs a separate approved origin. All approved sites share Chromium's managed allowlist. Site approval does not make the site's own content child-safe.
 
-Controls are designed to persist across reboot. A failed boot policy prevents the display manager starting instead of silently opening an unrestricted desktop.
+Controls are designed to persist across reboot. The child user manager and display manager wait for the persisted policy; a failed policy or missing controlled launcher mount prevents that session starting instead of silently opening an unrestricted desktop.
 
 ## Remove or recover
 

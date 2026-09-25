@@ -11,7 +11,7 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from native_runtime import account
+from native_runtime import account, is_mountpoint, APPS
 
 STATE = Path('/var/lib/omarchy-kids-control')
 BOOT_ID = Path('/proc/sys/kernel/random/boot_id')
@@ -98,13 +98,13 @@ def mount_options(flags):
 
 
 def release_mount(target, options):
-    if not os.path.ismount(target): return True
+    if not is_mountpoint(target): return True
     # A live desktop may have GVFS/portal submounts or open working directories.
     # Restore the original flags first; a busy bind can safely remain attached
     # without restrictions until logout/reboot, and be reused on reactivation.
     command(['/usr/bin/mount','-o','remount,bind,'+','.join(options),target])
     result=subprocess.run(['/usr/bin/umount',target],capture_output=True)
-    return result.returncode==0 or not os.path.ismount(target)
+    return result.returncode==0 or not is_mountpoint(target)
 
 
 def apply():
@@ -160,9 +160,11 @@ def apply():
     (STATE / 'native-mounts-boot-id').write_text(BOOT_ID.read_text())
     # Mount after the home restriction, so it remains visible on every boot.
     apps = Path(home) / '.local/share/applications'
-    if not os.path.ismount(apps):
+    if not is_mountpoint(apps):
         command(['/usr/bin/mount', '--bind', '/usr/local/share/omarchy-kids/applications', str(apps)])
-        command(['/usr/bin/mount', '-o', 'remount,bind,ro,nosuid,nodev,noexec', str(apps)])
+    if not os.path.samefile(apps, APPS):
+        raise RuntimeError('The applications directory has an unrelated mount; refusing to replace it.')
+    command(['/usr/bin/mount', '-o', 'remount,bind,ro,nosuid,nodev,noexec', str(apps)])
     # Existing browser sessions must not survive policy activation.
     blocked = set(map(str, paths))
     for proc in Path('/proc').glob('[0-9]*'):
@@ -185,10 +187,20 @@ def hermes_acl():
     raise RuntimeError('Hermes did not create its chat socket.')
 
 
+def remove_launcher_mounts(apps):
+    # beta.1 could stack bind mounts because os.path.ismount did not see them.
+    # Remove every owned layer, leaving unrelated mounts and user files intact.
+    for _ in range(64):
+        if not is_mountpoint(apps) or not os.path.samefile(apps, APPS):
+            return
+        command(['/usr/bin/umount', '--lazy', str(apps)])
+    raise RuntimeError('Could not detach all controlled launcher mounts.')
+
+
 def remove():
     config = account()
     apps = pwd.getpwnam(config['user']).pw_dir + '/.local/share/applications'
-    if os.path.ismount(apps): command(['/usr/bin/umount','--lazy', apps])
+    remove_launcher_mounts(apps)
     subprocess.run(['/usr/bin/nft', 'delete', 'table', 'inet', 'omarchy_kids'], capture_output=True)
     from hosts_policy import apply as apply_hosts
     apply_hosts(False)

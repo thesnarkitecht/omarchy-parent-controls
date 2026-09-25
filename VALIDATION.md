@@ -1,8 +1,16 @@
-# Release validation — 0.4.0-beta.1
+# Release validation — 0.4.0-beta.2
 
 Community beta tested September 25, 2026 on Arch Linux ARM, Omarchy 4.0.3, kernel 7.2.6. The existing desktop account is the controlled account. This is a supervised-rollout release, not a claim of comprehensive security or compatibility.
 
-## Passed on the VM
+## Launcher update — beta.2
+
+- 39 unit/package tests pass on the ARM VM, including readable atomic launcher publication, add/remove in both launcher directories, and refusing a controlled session when its overlay is missing.
+- A running Quickshell desktop-entry provider discovered GitHub immediately after its application directory was replaced, observed removal, and found the approved webapp without a controlled overlay. Restarting the provider after restoring the original directory made the original installed editor visible again. This uses isolated test directories and Qt's offscreen platform, without changing real family approvals.
+- An isolated Linux user/mount namespace reproduced the same-filesystem bind mount detection bug. The corrected code detected the mount and detached two stacked controlled layers, revealing the original app without installing, removing, or modifying it.
+- Controlled-mode transitions reconnect the shell's launcher watches after changing mounts. Mode switches never install or uninstall packages. Upgrades no longer add optional everyday apps.
+- Startup now orders the child's user manager after policy application, covering TTY/UWSM and lingering sessions as well as display-manager logins. The boot guard additionally verifies the controlled launcher mount. The new startup gate has unit and systemd dependency validation, and passed its read-only check against the VM’s actual active controlled mount; an actual reboot with beta.2 on the affected computer remains to be verified.
+
+## Previous beta.1 validation on the VM
 
 - All 32 unit/package tests, with no skips: PIN verification and rotation, persisted retry backoff, rejected malformed policies/URLs, exact-host browser rules, reversible hosts/NSS changes, reboot-aware mount tracking, busy-mount restoration, deterministic release generation, and actual bootstrap rejection of a modified archive before extraction.
 - Packaged installer upgrade, removal and reinstall. Parent PIN and website approvals survived. Original administrator groups and authentication were restored during removal.
@@ -18,6 +26,6 @@ Community beta tested September 25, 2026 on Arch Linux ARM, Omarchy 4.0.3, kerne
 
 The VM retains acceptance logs in `/var/log/omarchy-parent-controls-*-check.log` and `/var/log/omarchy-kids-managed-desktop-check.log`. Local screenshots record the blocked browser and the post-reboot desktop. These logs and browser/model profiles are not bundled in the public release.
 
-The latest source bundle was installed on the development VM. Final documentation edits do not change its runtime code. The checksum bootstrap was tested with both valid and deliberately modified downloads.
+The beta.1 source bundle was installed on the development VM. Beta.2 launcher tests run against extracted release code without replacing the installed privileged service. The checksum bootstrap was tested with both valid and deliberately modified downloads.
 
 A clean installation on a separate machine, x86_64 desktop compatibility, cloud-only Hermes providers, and an independent security audit remain unverified. Managed Hermes in this release requires an already installed root-owned desktop binary and a configured local model endpoint. General terminal networking remains enabled; see SECURITY.md for the resulting limits.
