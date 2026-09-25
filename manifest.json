@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "thesnarkitecht.kids-lockdown",
+  "name": "Parent Controls",
+  "version": "0.4.0-beta.1",
+  "author": "thesnarkitecht",
+  "description": "PIN-protected restrictions on the normal Omarchy desktop",
+  "kinds": [
+    "overlay",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "overlay": "Controls.qml"
+  },
+  "barWidget": {
+    "displayName": "Parent Controls",
+    "description": "Open PIN-protected parent controls",
+    "category": "System",
+    "allowMultiple": false
+  },
+  "keepLoaded": true
+}

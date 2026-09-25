@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Approved webapps
+Exec=/usr/local/bin/omarchy-kids-open-url %u
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/http;x-scheme-handler/https;

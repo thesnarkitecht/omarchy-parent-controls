@@ -1,0 +1,5 @@
+#%PAM-1.0
+# Login passwords never authenticate this service.
+auth requisite pam_exec.so quiet expose_authtok /usr/local/lib/omarchy-kids/pam-pin
+account required pam_permit.so
+session include system-auth

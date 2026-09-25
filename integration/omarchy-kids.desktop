@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Kids Controls
+Comment=Manage approved apps, websites and kids mode
+Exec=/usr/local/bin/omarchy-kids
+Icon=system-lock-screen
+Terminal=false
+Categories=Settings;Security;

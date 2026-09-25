@@ -1,0 +1,58 @@
+"""Root-only, fixed on/off transitions for the existing desktop account."""
+import os
+import pwd
+from pathlib import Path
+import subprocess
+import sys
+
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from native_runtime import account, desktop_entries
+from control import Store
+
+def run(*args):
+    return subprocess.run(list(args),check=True,text=True)
+
+def main():
+    if os.geteuid() != 0: raise SystemExit(1)
+    config=account()
+    home=pwd.getpwnam(config['user']).pw_dir
+    marker=Path('/etc/omarchy-kids/controlled-on')
+    if sys.argv[1] == 'on':
+        marker.touch(mode=0o644)
+        run('/usr/bin/python3','-I','/usr/local/lib/omarchy-kids/native-ui.py')
+        desktop_entries(Store().read('policy.json'))
+        marker.touch(mode=0o644)
+        run('/usr/bin/systemctl','restart','omarchy-kids-policy.service')
+    elif sys.argv[1] == 'off':
+        from native_runtime import revoke_webapps, CHROME_POLICY
+        revoke_webapps()
+        # A machine that has never opened Hermes has no transient unit yet.
+        if subprocess.run(['/usr/bin/systemctl','is-active','--quiet','omarchy-kids-hermes-desktop.service']).returncode == 0:
+            run('/usr/bin/systemctl','stop','omarchy-kids-hermes-desktop.service')
+        run('/usr/bin/systemctl','stop','omarchy-kids-policy.service')
+        result=subprocess.run(['/usr/bin/systemctl','show','--property=Result','--value','omarchy-kids-policy.service'],capture_output=True,text=True,check=True)
+        if result.stdout.strip() != 'success':
+            raise RuntimeError('The system could not finish removing restrictions. Controlled mode was not marked off.')
+        marker.unlink(missing_ok=True)
+        CHROME_POLICY.unlink(missing_ok=True)
+        backup=Path('/var/lib/omarchy-kids-control/native-backup/ui')
+        files={'omarchy-menu.jsonc':'.config/omarchy/extensions/omarchy-menu.jsonc',
+               'shell.json':'.config/omarchy/shell.json', 'hyprland.lua':'.config/hypr/hyprland.lua',
+               'bindings.lua':'.config/hypr/bindings.lua'}
+        for name,dest in files.items():
+            if not (backup/name).exists(): continue
+            subprocess.run(['/usr/bin/runuser','-u',config['user'],'--','/usr/bin/tee',home+'/'+dest],
+                           input=(backup/name).read_bytes(),stdout=subprocess.DEVNULL,check=True)
+        # Keep the quick parent toggle available on the unrestricted desktop.
+        run('/usr/bin/runuser','-u',config['user'],'--','/usr/bin/env',
+            'OMARCHY_PATH=/usr/share/omarchy','XDG_RUNTIME_DIR=/run/user/'+str(config['uid']),
+            '/usr/bin/omarchy','bar','put','thesnarkitecht.kids-lockdown','--after','omarchy.clock')
+    else: raise SystemExit(2)
+    runtime='/run/user/'+str(config['uid'])
+    instances=list((Path(runtime)/'hypr').glob('*/.socket.sock'))
+    if instances:
+        run('/usr/bin/runuser','-u',config['user'],'--','/usr/bin/env',
+            'XDG_RUNTIME_DIR='+runtime,'HYPRLAND_INSTANCE_SIGNATURE='+instances[0].parent.name,
+            '/usr/bin/hyprctl','reload')
+
+if __name__ == '__main__': main()

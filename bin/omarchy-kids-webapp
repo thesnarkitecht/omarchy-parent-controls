@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/python3 -I -c 'import sys; sys.path.insert(0,"/usr/local/lib/omarchy-kids"); from client import request; request("launch-webapp", id=sys.argv[1])' "$1"

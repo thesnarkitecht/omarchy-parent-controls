@@ -1,0 +1,14 @@
+#!/usr/bin/python3 -I
+import os
+from pathlib import Path
+import sys
+sys.path.insert(0, '/usr/local/lib/omarchy-kids')
+from native_runtime import account
+from client import request
+if Path('/etc/omarchy-kids/controlled-on').exists():
+    request('launch-hermes')
+else:
+    config = account()
+    os.environ.update(config.get('hermes_environment', {}))
+    binary = config.get('hermes_binary', '/opt/hermes-desktop/Hermes')
+    os.execv(binary, [binary, *sys.argv[1:]])

@@ -1,0 +1,14 @@
+[Unit]
+Description=Restrictions for the existing Omarchy child account
+After=local-fs.target
+Before=display-manager.service
+ConditionPathExists=/etc/omarchy-kids/controlled-on
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/native_policy.py apply
+ExecStop=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/native_policy.py remove
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

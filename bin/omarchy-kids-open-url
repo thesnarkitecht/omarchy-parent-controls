@@ -1,0 +1,17 @@
+#!/usr/bin/python3 -I
+import subprocess
+import sys
+from pathlib import Path
+sys.path.insert(0,'/usr/local/lib/omarchy-kids')
+from client import request
+from core import approved_url
+url=sys.argv[1] if len(sys.argv)==2 else ''
+if not Path('/etc/omarchy-kids/controlled-on').exists():
+    raise SystemExit(subprocess.call(['/usr/bin/chromium',url]))
+policy=request('status')['policy']
+for app in policy['webapps']:
+    if approved_url(url,app['origins']):
+        request('launch-webapp',id=app['id'],url=url)
+        raise SystemExit(0)
+subprocess.run(['/usr/bin/notify-send','Parent approval needed','This website has not been approved.'])
+raise SystemExit('Website not approved by a parent.')

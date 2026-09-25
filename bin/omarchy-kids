@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/omarchy-shell shell call thesnarkitecht.kids-lockdown open "{}"
