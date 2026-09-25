@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import pwd
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,16 @@ def run(*args, **kwargs):
     return subprocess.run(list(args),check=True,**kwargs)
 
 
+def installer_lock(path, info):
+    # uv intentionally creates mode-0666 advisory locks. These are not code or
+    # cached packages. Accept only non-executable regular locks in its known
+    # scratch/cache directories; ownership is still checked by trusted_tree.
+    return (stat.S_ISREG(info.st_mode) and not info.st_mode & 0o111
+            and path.name.endswith('.lock')
+            and any(path.is_relative_to(ROOT / name) for name in
+                    ('tmp', 'build-home/.cache/uv', 'data/cache/uv')))
+
+
 def trusted_tree():
     # Never adopt a pre-existing child-owned installation as privileged code.
     for path in [ROOT, *ROOT.parents]:
@@ -50,7 +61,8 @@ def trusted_tree():
             for name in dirs + files:
                 path = Path(base)/name
                 info = path.lstat()
-                if info.st_uid != 0 or (not path.is_symlink() and info.st_mode & 0o022):
+                if info.st_uid != 0 or (not path.is_symlink() and info.st_mode & 0o022
+                                        and not installer_lock(path, info)):
                     raise ValueError('Untrusted file in Hermes runtime: '+str(path))
 
 

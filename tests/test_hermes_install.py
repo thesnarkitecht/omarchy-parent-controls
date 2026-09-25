@@ -14,6 +14,17 @@ import hermes_install as hermes
 import parent_tools
 
 class HermesInstallationTests(unittest.TestCase):
+    def test_uv_advisory_locks_do_not_make_program_files_trusted(self):
+        import stat
+        lock=SimpleNamespace(st_mode=stat.S_IFREG|0o666)
+        self.assertTrue(hermes.installer_lock(hermes.ROOT/'tmp/uv-build.lock',lock))
+        self.assertTrue(hermes.installer_lock(hermes.ROOT/'data/cache/uv/.lock',lock))
+        self.assertFalse(hermes.installer_lock(hermes.ROOT/'source/program.py',lock))
+        self.assertFalse(hermes.installer_lock(hermes.ROOT/'source/program.lock',lock))
+        self.assertFalse(hermes.installer_lock(hermes.ROOT/'tmp/program.py',lock))
+        for mode in (stat.S_IFREG|0o777,stat.S_IFDIR|0o777,stat.S_IFLNK|0o777):
+            self.assertFalse(hermes.installer_lock(hermes.ROOT/'tmp/program.lock',SimpleNamespace(st_mode=mode)))
+
     def test_regular_user_cannot_install(self):
         with patch.object(hermes.os,'geteuid',return_value=1000), patch.object(hermes,'install_runtime') as install:
             with self.assertRaisesRegex(ValueError,'parent PIN'):hermes.ensure(None)
