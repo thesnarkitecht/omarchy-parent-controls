@@ -85,27 +85,42 @@ def read(store):
 
 def public(store):
     state = read(store)
-    return {"name": state['name'], "requests": state['requests'], "videos": state['videos'],
+    from activity import summary
+    from access_control import status as access_status
+    return {"screen_time": summary(store.path), "access": access_status(), "paired_phones": len(state['phones']), "name": state['name'], "requests": state['requests'], "videos": state['videos'],
             "voice": state['voice'], "policy": store.read('policy.json'),
             "controlled": Path('/etc/omarchy-kids/controlled-on').exists(),
             "requestable_apps": [{'id': key, 'name': app['name']} for key, app in CATALOG.items() if Path(app['binary']).is_file()],
             "voice_installed": Path('/usr/local/bin/school-voice').is_file()}
 
 
-def enroll(store, endpoint, name):
+def parent_origin(endpoint):
+    normalized = origin(endpoint)
     u = urlsplit(endpoint)
-    if (u.scheme != 'https' or not u.hostname or not u.hostname.endswith('.ts.net')
-            or u.username or u.password or u.port not in (None, 443)
-            or u.path not in ('', '/') or u.query or u.fragment):
-        raise ValueError("Use this machine's HTTPS Tailscale Serve address.")
+    if u.path not in ('', '/') or u.query or u.fragment:
+        raise ValueError("Use the laptop's remote HTTPS address without a path or query.")
+    return normalized
+
+
+def enroll(store, endpoint, name, relay=None):
+    endpoint = parent_origin(endpoint)
     state = read(store)
     if len(state['phones']) >= 8:
         raise ValueError("Revoke an old phone before pairing another.")
     token, key = secrets.token_urlsafe(32), secrets.token_hex(16)
     state['name'] = short_text(name)
-    state['phones'].append({'id': key, 'hash': hashlib.sha256(token.encode()).hexdigest()})
+    record = {'id': key, 'hash': hashlib.sha256(token.encode()).hexdigest()}
+    if relay is not None:
+        if (not isinstance(relay, dict) or set(relay) != {'channel', 'relay_token'}
+                or not re.fullmatch(r'[0-9a-f]{64}', relay.get('channel', ''))
+                or not re.fullmatch(r'[A-Za-z0-9_-]{43}', relay.get('relay_token', ''))):
+            raise ValueError('Invalid remote connection configuration.')
+        from sealed_remote import keys
+        record['keys'] = keys(token, key)
+    state['phones'].append(record)
     store.save('family.json', state)
-    return {'version': 1, 'id': key, 'name': state['name'], 'endpoint': 'https://' + u.hostname, 'token': token}
+    return {'version': 2 if relay else 1, 'id': key, 'name': state['name'], 'endpoint': endpoint,
+            'token': token, **(relay or {})}
 
 
 def revoke(store):
@@ -220,6 +235,11 @@ def apply(store, state, operation, fields):
         policy = store.read('policy.json')
         policy['webapps'] = [a for a in policy['webapps'] if a['id'] != fields['app_id']]
         save_policy(store, policy)
+    elif operation == 'set-paused':
+        if set(fields) != {'paused'} or type(fields['paused']) is not bool:
+            raise ValueError('Choose Pause or Resume.')
+        from access_control import change
+        change(fields['paused'])
     elif operation == 'set-voice':
         if (set(fields) != {'enabled', 'wake_enabled', 'phrase'} or type(fields['enabled']) is not bool
                 or type(fields['wake_enabled']) is not bool or not isinstance(fields['phrase'], str)

@@ -1,0 +1,28 @@
+name: Managed relay checks
+on:
+  pull_request:
+    paths: ['relay/**', '.github/workflows/relay.yml']
+  push:
+    branches: [main]
+    paths: ['relay/**', '.github/workflows/relay.yml']
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: relay/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm exec wrangler deploy --dry-run

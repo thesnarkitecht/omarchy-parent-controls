@@ -117,7 +117,7 @@ def main():
             try: pwd.getpwnam(name)
             except KeyError: pass
             else: raise ValueError('Refusing to reuse an unrelated service account: '+name)
-    packages=['python','pyside6','acl','nftables','chromium','mpv','yt-dlp','qrencode','bubblewrap']
+    packages=['python','python-cryptography','python-websockets','pyside6','acl','nftables','chromium','mpv','yt-dlp','qrencode','bubblewrap']
     if not args.skip_apps and not previous:
         packages += ['gnome-calculator','papers','file-roller','gnome-text-editor']
     run('/usr/bin/pacman','-S','--needed','--noconfirm',*packages)
@@ -144,6 +144,9 @@ def main():
     for name in ('run','omarchy-parent-controls','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
         copy(SOURCE/'bin'/name,LIB/'run' if name=='run' else Path('/usr/local/bin')/name,0o755)
     copy(SOURCE/'native/pam-pin',LIB/'pam-pin',0o755)
+    copy(SOURCE/'native/pam-access',LIB/'pam-access',0o755)
+    for unit in ('omarchy-kids-access.service','omarchy-kids-access.timer','omarchy-kids-activity.service'):
+        copy(SOURCE/'systemd'/unit, Path('/etc/systemd/system')/unit)
     copy(SOURCE/'native/windows-pkexec',LIB/'windows-tools/pkexec',0o755)
     copy(SOURCE/'native/omarchy-kids-sudo','/etc/pam.d/omarchy-kids-sudo')
     copy(SOURCE/'packaging/remove.py',LIB/'remove.py')
@@ -156,6 +159,8 @@ def main():
     write('/etc/systemd/system/omarchy-kids-audio.service',
           (SOURCE/'systemd/omarchy-kids-audio.service').read_text().replace('@CHILD_USER@', user.pw_name))
     copy(SOURCE/'systemd/omarchy-kids-remote.service','/etc/systemd/system/omarchy-kids-remote.service')
+    copy(SOURCE/'systemd/omarchy-kids-relay.service','/etc/systemd/system/omarchy-kids-relay.service')
+    copy(SOURCE/'remote-service.json',LIB/'remote-service.json')
     copy(SOURCE/'native/approved-browser.desktop','/usr/local/share/applications/omarchy-kids-approved-browser.desktop')
     if config.get('hermes_binary'):
         launcher=Path('/usr/local/bin/hermes-desktop')
@@ -235,7 +240,9 @@ def main():
     as_user(user,'/usr/bin/xdg-mime','default','omarchy-kids-approved-browser.desktop','x-scheme-handler/http','x-scheme-handler/https')
     environment={**os.environ,'OMARCHY_PATH':'/usr/share/omarchy','XDG_RUNTIME_DIR':'/run/user/'+str(user.pw_uid)}
     as_user(user,'/usr/bin/omarchy','bar','put','thesnarkitecht.kids-lockdown','--after','omarchy.clock',env=environment)
-    run('/usr/bin/systemctl','try-restart','omarchy-kids-remote.service')
+    run('/usr/bin/systemctl','try-restart','omarchy-kids-remote.service','omarchy-kids-relay.service')
+    run('/usr/bin/systemctl','enable','--now','omarchy-kids-access.timer','omarchy-kids-activity.service')
+    run('/usr/bin/systemctl','restart','omarchy-kids-activity.service')
     from control import atomic_json
     atomic_json(LIB/'release.json', {'version':json.loads((SOURCE/'manifest.json').read_text())['version']})
     os.chmod(LIB/'release.json', 0o644)
@@ -280,6 +287,14 @@ def prepare_home(user,config):
 
 def install_auth(user):
     name=user.pw_name
+    login=Path('/etc/pam.d/system-login')
+    original=login.read_text()
+    if not (STATE/'system-login.original').exists():
+        write(STATE/'system-login.original',original,0o600)
+    lines=[line for line in original.splitlines() if '/usr/local/lib/omarchy-kids/pam-access' not in line]
+    prefix='auth [success=done default=ignore] pam_exec.so quiet expose_authtok /usr/local/lib/omarchy-kids/pam-access\naccount required pam_exec.so quiet /usr/local/lib/omarchy-kids/pam-access\n'
+    write(login,prefix+'\n'.join(lines)+'\n')
+    write('/etc/issue.d/omarchy-kids.issue','Parent pause: sign in as '+name+' with the parent PIN to resume a paused computer.\n')
     write('/etc/sudoers.d/zzzz-omarchy-kids-parent-pin',f'Defaults:{name} authenticate, timestamp_timeout=0, pam_service="omarchy-kids-sudo", pam_login_service="omarchy-kids-sudo", passprompt="Parent PIN: ", !rootpw, !targetpw, !runaspw\n{name} ALL=(ALL:ALL) PASSWD: ALL\n',0o440)
     run('/usr/bin/visudo','-c')
     allowed=['org.freedesktop.login1.'+x for x in ('power-off','reboot','suspend','hibernate')]

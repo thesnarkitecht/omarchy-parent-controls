@@ -1,0 +1,24 @@
+[Unit]
+Description=Local screen-time totals for the school account
+After=local-fs.target
+ConditionPathExists=/etc/omarchy-kids/account.json
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/omarchy-kids/run activity
+User=root
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/omarchy-kids-control
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

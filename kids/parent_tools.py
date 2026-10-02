@@ -18,6 +18,13 @@ def ensure_windows_stopped():
     if result.returncode == 0 and result.stdout.strip() == 'true':
         raise ValueError('Shut down Windows before turning controlled mode on.')
 
+def launch_pairing():
+    # Opening a terminal grants nothing. sudo prompts once using parent-PIN PAM.
+    subprocess.Popen(['/usr/bin/omarchy-launch-floating-terminal-with-presentation',
+                      '/usr/local/bin/omarchy-parent-controls pair --wait'],
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, start_new_session=True)
+
 def launch(tool):
     if tool not in TOOLS:
         raise ValueError('Unknown parent tool.')

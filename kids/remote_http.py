@@ -1,4 +1,4 @@
-"""Unprivileged loopback-only relay. Put behind private Tailscale Serve HTTPS.
+"""Unprivileged loopback-only relay. Legacy direct HTTPS transport; the managed relay uses outbound WebSockets.
 
 All authorization and state changes happen in the root-owned Unix broker.
 This process has no credentials, no shell endpoint and no filesystem API.

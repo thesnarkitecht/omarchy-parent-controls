@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep the parent's pause choice in effect
+
+[Timer]
+OnBootSec=15
+OnUnitActiveSec=15
+Unit=omarchy-kids-access.service
+
+[Install]
+WantedBy=timers.target

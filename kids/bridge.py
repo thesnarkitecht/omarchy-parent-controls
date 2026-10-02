@@ -28,6 +28,10 @@ def dispatch(value):
     action = value.get("action")
     if action == "status":
         return status()
+    if action == 'open-pairing':
+        from parent_tools import launch_pairing
+        launch_pairing()
+        return {'ok': True, 'message': 'Enter the parent PIN in the pairing window.'}
     if action == 'ask-parent':
         return {**request('ask-parent', request=value.get('request')), 'message': 'Sent to your parent. You can check back here.'}
     if action == 'family-change':

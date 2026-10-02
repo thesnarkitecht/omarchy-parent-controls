@@ -35,12 +35,30 @@ def main():
     saved=json.loads((STATE/'installation.json').read_text())
     user=pwd.getpwnam(saved['user'])
     if user.pw_uid != saved['uid']: raise SystemExit('Account UID changed; recovery requires administrator review.')
-    config=json.loads((ETC/'account.json').read_text())
     failures=[]
     if args.recovery:
-        # A broken display configuration or busy mount must not prevent the
-        # recovery timer from restoring the original administrator access.
+        # Recovery must restore admin authentication even when a newer pause
+        # helper or the display environment is broken.
         restore_authentication(saved,user)
+    # Resume preserved work and remove the login gate before deleting helpers.
+    run('/usr/bin/systemctl','disable','--now','omarchy-kids-access.timer','omarchy-kids-activity.service',check=False)
+    if (LIB/'access_control.py').exists():
+        sys.path.insert(0,str(LIB))
+        from control import atomic_json
+        atomic_json(STATE/'access.json',{'paused':False})
+        try:
+            run(str(LIB/'run'),'access_control')
+        except (OSError, subprocess.SubprocessError) as error:
+            if not args.recovery: raise
+            failures.append(str(error))
+    login=Path('/etc/pam.d/system-login')
+    if login.exists():
+        lines=[line for line in login.read_text().splitlines() if '/usr/local/lib/omarchy-kids/pam-access' not in line]
+        login.write_text('\n'.join(lines)+'\n')
+    unlink('/etc/issue.d/omarchy-kids.issue')
+    for unit in ('omarchy-kids-access.service','omarchy-kids-access.timer','omarchy-kids-activity.service'):
+        unlink('/etc/systemd/system/'+unit)
+    config=json.loads((ETC/'account.json').read_text())
     try:
         run('/usr/bin/python3','-I',str(LIB/'native_mode.py'),'off')
     except subprocess.CalledProcessError as error:
@@ -59,7 +77,7 @@ def main():
         from family import revoke
         from control import Store
         revoke(Store())
-    for unit in ('omarchy-kids-audio.socket','omarchy-kids-audio.service','omarchy-kids-remote','omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
+    for unit in ('omarchy-kids-audio.socket','omarchy-kids-audio.service','omarchy-kids-relay','omarchy-kids-remote','omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
         run('/usr/bin/systemctl','disable','--now',unit,check=False)
     for path in Path('/etc/systemd/system').glob('omarchy-kids-*.service'): path.unlink()
     unlink('/etc/systemd/system/omarchy-kids-rollback.timer')

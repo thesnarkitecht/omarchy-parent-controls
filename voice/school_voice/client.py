@@ -25,23 +25,27 @@ def decide(text: str, policy: dict) -> str:
     mapped = {f'choice_{i}': key for i, key in enumerate(choices)} if policy.get('parent_controls') else {key: key for key in choices}
     wire_choices = {slot: choices[key] for slot, key in mapped.items()}
     server = policy["server"]
-    ca = trusted_file(Path(server["ca_file"]))
     token = trusted_file(Path(server["token_file"])).read_text().strip()
     if len(token) < 32 or any(c.isspace() for c in token):
         raise ValueError("Invalid device pairing token")
     request_id = secrets.token_hex(16)
     payload = {"version": 1, "id": request_id, "text": text, "actions": wire_choices}
-    context = ssl.create_default_context(cafile=str(ca))
-    context.hostname_checks_common_name = False
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
-    opener = build_opener(ProxyHandler({}), NoRedirect(), HTTPSHandler(context=context))
-    started = time.monotonic()
-    request = Request(server["url"].rstrip("/") + "/v1/decide", data=json.dumps(payload).encode(),
-                      headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
-    with opener.open(request, timeout=12) as response:
-        body = response.read(4097)
-    if len(body) > 4096 or time.monotonic() - started > 15:
-        raise ValueError("Laya's response was late or invalid. Please try again.")
+    if server.get('transport') == 'relay':
+        from .relay import exchange
+        body = exchange(server, token, payload)
+    else:
+        ca = trusted_file(Path(server["ca_file"]))
+        context = ssl.create_default_context(cafile=str(ca))
+        context.hostname_checks_common_name = False
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        opener = build_opener(ProxyHandler({}), NoRedirect(), HTTPSHandler(context=context))
+        started = time.monotonic()
+        request = Request(server["url"].rstrip("/") + "/v1/decide", data=json.dumps(payload).encode(),
+                          headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
+        with opener.open(request, timeout=12) as response:
+            body = response.read(4097)
+        if len(body) > 4096 or time.monotonic() - started > 15:
+            raise ValueError("Laya's response was late or invalid. Please try again.")
     result = json.loads(body)
     if not isinstance(result, dict) or set(result) != {"version", "id", "action"} or result["version"] != 1 or result["id"] != request_id:
         raise ValueError("Invalid Laya response")

@@ -36,7 +36,7 @@ From the reviewed `omarchy-parent-controls` source directory:
 bash install.sh
 ```
 
-Existing parent settings survive. The installer includes Little Screen, `mpv`, `yt-dlp`, QR-code support and bubblewrap. The remote relay is installed but **not enabled or exposed automatically**.
+Existing parent settings survive. The installer includes Little Screen, `mpv`, `yt-dlp`, QR-code support and bubblewrap. The outbound connector is installed and is enabled when a parent pairs a phone after relay activation.
 
 To install and approve terminal Hermes on a machine that does not have it yet, use `bash install.sh --with-hermes`. You can combine this with the voice-pairing option below. The program runtime is installed from the pinned, checksum-verified upstream installer under root ownership.
 
@@ -64,37 +64,19 @@ On a supervised Omarchy test installation, run `python3 tests/integration_hermes
 
 ## Connect the parent iPhone
 
-For a family using personal computers, Tailscale has a free Personal plan; no paid subscription or router port forwarding is required for this design. See [the free-options comparison](docs/REMOTE-ACCESS.md) for current limits and alternatives. The current app supports Tailscale endpoints; NetBird and ZeroTier are alternatives to evaluate, not implemented replacements.
+The new managed connection requires the protocol-v2 Parent Pocket build and an activated relay deployment. See [deployment status](docs/REMOTE-ACCESS.md); it is not yet enabled in the published alpha.6 release.
 
-1. Install and connect Tailscale on the phone and school computer using your own tailnet. Restrict access to the school's HTTPS service to parent devices with your tailnet access policy. Enable HTTPS certificates for that tailnet.
-2. On the school computer, start the private loopback relay and expose it through **Tailscale Serve**:
+1. On the laptop, open the lock icon and choose **Pair parent phone**.
+2. Enter the parent PIN. Scan the QR in Parent Pocket on your iPhone.
+3. The connection starts automatically and reconnects when the laptop comes online. No VPN, port forwarding, domain purchase, or per-laptop URL setup.
 
-   ```bash
-   sudo systemctl enable --now omarchy-kids-remote.service
-   sudo tailscale serve --bg http://127.0.0.1:43127
-   ```
+`omarchy-parent-controls pair` opens the same flow from a terminal. Keep the QR private: it grants parent access. The root broker stores its token hash and derived encryption keys. The connector and Cloudflare relay cannot decrypt parent commands.
 
-   Check `tailscale serve status` first if you already use Serve on this machine; preserve any existing routing. Use private Serve, **not public Funnel**. No router port-forwarding is needed. [Tailscale Serve documentation](https://tailscale.com/docs/reference/tailscale-cli/serve).
+The phone can approve pasted app URLs, approve individual videos, review child requests, change voice settings, see approximate daily/week unlocked desktop usage, and Pause/Resume access. Pause freezes running work in memory and blocks child login; it persists across reboot, although reboot itself does not preserve unsaved work. Screen time uses logind activity/idle/lock signals; it is approximate total desktop time, not per-app history or tamperproof accounting.
 
-3. Copy the HTTPS `.ts.net` origin shown by Serve into the pairing command:
+When the phone is unavailable, the parent can resume on the recovery console using the controlled username and parent PIN, or use `omarchy-parent-controls resume` from an available parent terminal. Removal resumes work and removes the account gate.
 
-   ```bash
-   sudo /usr/local/lib/omarchy-kids/run pair_parent \
-     --endpoint https://YOUR-COMPUTER.YOUR-TAILNET.ts.net \
-     --name "School laptop" --qr
-   ```
-
-   The existing parent PIN authorizes sudo. Scan the QR from Parent Pocket, or paste its pairing JSON. Treat that code as a parent credential. The computer stores only its token hash. Never send it to a child, Laya, an agent, or a public repository.
-
-4. Open `ParentPocket.xcodeproj` from the separate Parent Pocket project in Xcode, choose your signing team and a unique bundle identifier, and run it on your iPhone. An unsigned arm64 iOS build succeeded here; installation on a real phone requires your Apple signing setup. Nothing has been submitted to TestFlight or the App Store.
-
-To revoke **all paired parent phones for one computer**, run:
-
-```bash
-sudo /usr/local/lib/omarchy-kids/run pair_parent --revoke-all
-```
-
-Pair again afterward. Removing the Parent Controls plugin also revokes its phone tokens. Its remote relay is stopped during removal. Voice then fails closed because its approval broker is gone; downloaded models and family files are retained.
+Revoke all phones with `omarchy-parent-controls unpair`, then pair again. The relay capability is rotated and the broker immediately stops accepting old phone tokens. Removing the plugin also stops the connector. The iPhone app still requires Apple signing/distribution; no App Store or TestFlight release has been published.
 
 ## Implementation limits
 
@@ -104,7 +86,7 @@ This release does **not** add a general screenshot-driven browser/computer agent
 
 ## Validation
 
-See `FAMILY-VALIDATION.md`. The screenshots are real renders of the SwiftUI and Qt source with explicitly labeled sample data, not screenshots from a deployed school computer or physical iPhone.
+See [managed relay validation](docs/validation/managed-relay.md) for the current unreleased work and `FAMILY-VALIDATION.md` for the earlier implementation. The screenshots are real renders of the SwiftUI and Qt source with explicitly labeled sample data, not screenshots from a deployed school computer or physical iPhone.
 
 ## Sound and microphones in web apps
 
