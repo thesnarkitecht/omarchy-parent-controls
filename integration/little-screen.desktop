@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Little Screen
+Name=Videos
 Comment=Only the videos your parent picked
 Exec=/usr/local/bin/omarchy-kids-videos
 Icon=video-display

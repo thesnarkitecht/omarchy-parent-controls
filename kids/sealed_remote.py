@@ -79,7 +79,7 @@ def dispatch(store, packet):
     # Return application errors inside authenticated encryption too. Never
     # mistake a relay-generated status/error for a successful laptop response.
     try:
-        result = {'ok': True, **remote(store, body)}
+        result = {'ok': True, **remote(store, body, encrypted=True)}
     except (ValueError, OSError, RuntimeError, subprocess.SubprocessError) as error:
         result = {'ok': False, 'error': str(error)[:240]}
     return {'packet': {'phone': phone, 'id': rid,

@@ -1,6 +1,6 @@
 # Parent Controls for Omarchy
 
-**0.5.0-alpha.7 — preview release.** Adds temporary pairing codes, encrypted remote access, Pause/Resume and screen-time totals. Includes a curl installer, parent-authorized CLI updates, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [VM validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. Physical school-machine and iPhone testing remains pending.
+**0.5.0-alpha.8 — preview release.** Adds per-child computer names, phone-created parent PIN synchronization, mobile web-app editing, a simpler desktop menu and a redesigned Videos library. Includes a curl installer, parent-authorized CLI updates, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Videos. See [the family setup guide](FAMILY.md) and [VM validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. Physical school-machine and iPhone testing remains pending.
 
 Keep the normal Omarchy desktop, with parent-approved webapps and a private parent PIN for administration.
 
@@ -19,7 +19,7 @@ This is a set of practical guardrails for young children who know their login pa
 
 Web-app speaker and microphone access use a dedicated local audio connection while School Voice dictation stays on the normal desktop audio service. See [audio setup and diagnostics](docs/WEBAPP-AUDIO.md).
 
-The encrypted managed relay is deployed and verified, with no VPN or router setup. [Deployment status and pairing](docs/REMOTE-ACCESS.md). The alpha.7 installer includes the managed connection and temporary pairing codes.
+The encrypted managed relay is deployed and verified, with no VPN or router setup. [Deployment status and pairing](docs/REMOTE-ACCESS.md). The alpha.8 installer includes the managed connection and temporary pairing codes.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ The encrypted managed relay is deployed and verified, with no VPN or router setu
 Run this in a terminal on the child's Omarchy computer:
 
 ```bash
-curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.5.0-alpha.7/bootstrap.sh | bash
+curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.5.0-alpha.8/bootstrap.sh | bash
 ```
 
 This version-pinned preview installer verifies the release archive's SHA-256 before extracting it. The installer reads passwords from the terminal, so piping it from curl works. To review first, download `bootstrap.sh`, read it, then run `bash bootstrap.sh`. To pass setup options through the pipeline, use `bash -s -- --with-hermes` (or `--voice-pairing /path/to/pairing`) in place of `bash`. From a root terminal, also pass `--user CHILD_USERNAME`.
@@ -66,13 +66,13 @@ The release builder produces `bootstrap.sh` with an embedded archive checksum. T
 
 ## Parent controls
 
-Open the **lock icon** in the bar. Turn controlled mode off/on, add or remove a webapp, or change the PIN. Each change asks for the PIN. Turning mode off restores the normal app/menu access and refreshes the launcher so all previously visible installed apps reappear; Parents stays available for quickly turning it back on. Switching modes never installs or uninstalls applications. Approved webapps appear in the launcher immediately after approval, in either mode.
+Open the **lock icon** in the bar to turn controlled mode off/on with the parent PIN. Manage web apps, videos, computer names and the shared parent PIN in **Omarchy Parent Controls** on your phone. Turning mode off restores the normal app/menu access and refreshes the launcher so all previously visible installed apps reappear; Parents stays available for quickly turning it back on. Switching modes never installs or uninstalls applications. Approved webapps appear in the launcher immediately after approval, in either mode.
 
-Use **Edit** to add related sites to an existing webapp. For example, `https://x.ai` and `https://grok.com` are separate approvals; include both to follow the Grok button. Approved sites may open new windows, while other destinations remain blocked. **Clear data…** requires the parent PIN and resets that webapp’s history, cookies and cache, signing it out.
+In the phone’s **Web Apps** tab, tap an app to add related sites to an existing webapp. For example, `https://x.ai` and `https://grok.com` are separate approvals; include both to follow the Grok button. Approved sites may open new windows, while other destinations remain blocked. **Clear data** in the unlocked parent app and resets that webapp’s history, cookies and cache, signing it out.
 
 The normal keyboard shortcuts stay loaded. Browser shortcuts open the approved-app launcher, webapp shortcuts pass through the approved-site check, and unavailable app shortcuts show a parent-approval notice. Turning controls off restores their original actions.
 
-**Parent tools**, available with controls off and PIN approval, opens Omarchy’s agent picker or Windows VM setup/launcher. Agent selection does not install every agent: Omarchy installs only what the parent explicitly chooses. The selected default is captured when controls are turned on; the plugin no longer forces the agent shortcut to Hermes Desktop. When Hermes is selected, installing/upgrading the plugin prepares its official CLI in a root-owned runtime outside the child’s home. Other home-installed agent runtimes can still be affected by the executable restrictions. Windows uses the stock Omarchy installer, with its privileged actions routed through the parent-PIN sudo prompt. Shut Windows down before enabling controls; the Windows guest needs its own parental controls.
+With controls off, use Omarchy’s normal menus for its agent picker or Windows VM setup/launcher; privileged installation still requires the parent PIN. Agent selection does not install every agent: Omarchy installs only what the parent explicitly chooses. The selected default is captured when controls are turned on; the plugin no longer forces the agent shortcut to Hermes Desktop. When Hermes is selected, installing/upgrading the plugin prepares its official CLI in a root-owned runtime outside the child’s home. Other home-installed agent runtimes can still be affected by the executable restrictions. Windows uses the stock Omarchy installer, with its privileged actions routed through the parent-PIN sudo prompt. Shut Windows down before enabling controls; the Windows guest needs its own parental controls.
 
 Add `https://ollama.com` as a first webapp if desired. Approval is by exact HTTPS host: a redirect or login hosted elsewhere needs a separate approved origin. All approved sites share Chromium's managed allowlist. Site approval does not make the site's own content child-safe.
 
@@ -113,4 +113,4 @@ Agent settings and conversations now persist in `/var/lib/omarchy-hermes-state/U
 
 After installation, run `python3 tests/integration_hermes_sandbox.py` from the reviewed source as the child, without sudo. It tests the actual namespace, privilege restrictions, hidden parent/session paths, executable project scripts, Python venv, Git and the upstream Hermes launcher. This check passed in the Omarchy ARM VM; physical school-machine testing remains pending.
 
-If you select Hermes later, turn controls off, then use **Parent tools → Install or repair Hermes**. The terminal requests the parent PIN through sudo. This does not change the chosen agent. Return to controlled mode afterward. The same repair is available as `sudo python3 -I /usr/local/lib/omarchy-kids/hermes_install.py`. Program updates require parent authorization; Hermes cannot rewrite its system-owned runtime. Removing parental controls retains the installed Hermes command and family data.
+If you select Hermes later, turn controls off, then run `sudo python3 -I /usr/local/lib/omarchy-kids/hermes_install.py`. The terminal requests the parent PIN through sudo. This does not change the chosen agent. Return to controlled mode afterward. The same repair is available as `sudo python3 -I /usr/local/lib/omarchy-kids/hermes_install.py`. Program updates require parent authorization; Hermes cannot rewrite its system-owned runtime. Removing parental controls retains the installed Hermes command and family data.
