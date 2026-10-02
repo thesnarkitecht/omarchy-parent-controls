@@ -1,6 +1,6 @@
 # Automatic remote parent access
 
-The new default is the managed encrypted relay in [`relay/`](../relay/README.md). It uses Cloudflare Workers and hibernating Durable Objects on a permanent `workers.dev` address. No VPN, custom domain, router forwarding, or server administration is required. A maintainer deploys it once; each laptop connects outward automatically after pairing. The parent app needs the corresponding protocol-v2 build.
+The new default is the managed encrypted relay in [`relay/`](../relay/README.md). The selected interim provider is Render Free, with an included `onrender.com` address and managed HTTPS. The optional Cloudflare adapter remains available. No VPN, custom domain, router forwarding, or server administration is required. A maintainer deploys it once; each laptop connects outward automatically after pairing. The parent app needs the corresponding protocol-v2 build.
 
 **Deployment is pending account access.** `remote-service.json` deliberately has no endpoint until a permanent deployment passes validation. The published alpha.6 release still uses the older direct HTTPS setup. Source changes alone do not activate a hosted service.
 
@@ -8,7 +8,7 @@ After activation: open the laptop lock icon → **Pair parent phone** → enter 
 
 The encrypted relay carries only bounded parent operations and Laya suggestion requests. Laya audio capture and transcription stay on the laptop; actions are checked and executed on the laptop. Local dictation continues without the relay. The laptop and the Laya host must be awake for their respective remote functions. Offline commands are never queued for later execution.
 
-Cloudflare manages the host and public certificates. This still needs ordinary software updates, an active account, and available free-plan quota; it is not an unlimited or guaranteed-uptime service. Nothing enables a paid plan automatically. See [Cloudflare's published limits](https://developers.cloudflare.com/durable-objects/platform/pricing/).
+Render manages the host and public certificates. Its free service may take about a minute to wake after an idle period; the devices reconnect automatically. This still needs ordinary software updates, an active account, and available free-plan quota; it is not an unlimited or guaranteed-uptime service. Nothing enables a paid plan automatically. See [Render’s free-service limits](https://render.com/docs/free).
 
 Existing direct HTTPS pairing remains compatible, including private Tailscale Serve origins. That is an advanced alternative and requires its own certificate and network setup. ProtonVPN port forwarding is not used. Never disable TLS checks or expose the root broker as a general network service.
 

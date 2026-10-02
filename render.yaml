@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: parent-pocket-relay
+    runtime: node
+    plan: free
+    region: ohio
+    rootDir: relay
+    buildCommand: pnpm install --frozen-lockfile --prod
+    startCommand: node src/render.mjs
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: 22

@@ -1,5 +1,5 @@
 """Run against pnpm dev using disposable enrollment and no real devices."""
-import sys,json,secrets,hashlib,time,threading
+import sys,json,secrets,hashlib,time,threading,os
 from pathlib import Path
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidStatus, ConnectionClosed
@@ -11,7 +11,7 @@ import tempfile
 root=tempfile.TemporaryDirectory(); store=Store(Path(root.name));store.initialize('12345678')
 host=secrets.token_urlsafe(32); client=secrets.token_urlsafe(32)
 channel=hashlib.sha256(host.encode()).hexdigest()
-base='ws://127.0.0.1:8787/v2/'
+base=os.environ.get('RELAY_TEST_URL','ws://127.0.0.1:8787').rstrip('/')+'/v2/'
 headers={'Authorization':'Bearer '+host,'X-Client-Hash':hashlib.sha256(client.encode()).hexdigest()}
 pair=family.enroll(store,'https://relay.example.org','Test laptop',{'channel':channel,'relay_token':client})
 keys=sealed.keys(pair['token'],pair['id'])

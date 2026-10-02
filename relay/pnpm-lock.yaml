@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      ws:
+        specifier: 8.22.0
+        version: 8.22.0
     devDependencies:
       wrangler:
         specifier: 4.147.0
@@ -501,6 +505,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   youch-core@0.3.3:
     resolution: {integrity: sha512-ho7XuGjLaJ2hWHoK8yFnsUGy2Y5uDpqSTq1FkHLK4/oqKtyUU1AFbOOxY4IpC9f0fTLjwYbslUz0Po5BpD1wrA==}
 
@@ -880,6 +896,8 @@ snapshots:
       - utf-8-validate
 
   ws@8.21.0: {}
+
+  ws@8.22.0: {}
 
   youch-core@0.3.3:
     dependencies:

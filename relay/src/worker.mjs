@@ -31,7 +31,8 @@ export default {
 export class Room {
   constructor(ctx, env) {
     this.ctx = ctx;
-    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
+    if (ctx.setWebSocketAutoResponse)
+      ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
   }
   async fetch(request) {
     const device = new URL(request.url).pathname.includes('/device/');
@@ -88,7 +89,7 @@ export class Room {
   }
   webSocketClose(ws, code) {
     const state = ws.deserializeAttachment();
-    ws.close(code === 1005 ? 1000 : code);
+    ws.close([1000,1001,1002,1003,1007,1008,1009,1011,1012,1013].includes(code) ? code : 1001);
     if (state?.device && !this.ctx.getWebSockets('device').some(s => s.deserializeAttachment()?.peer !== state.peer))
       for (const parent of this.ctx.getWebSockets('parent')) {
         parent.send(JSON.stringify({error: 'Computer offline'}));
