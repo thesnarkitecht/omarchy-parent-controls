@@ -1,6 +1,6 @@
 # Parent Controls, now with voice and Little Screen
 
-This is the **0.5.0-alpha.2 source preview**. It extends the existing Omarchy Parent Controls project with URL-first approvals and a managed Hermes coding sandbox. No school computers were changed, and no release was published to GitHub.
+This is the **0.5.0-alpha.3 source preview**. It extends the existing Omarchy Parent Controls project with URL-first approvals and a managed Hermes coding sandbox. No school computers were changed, and no release was published to GitHub.
 
 ## What belongs where
 
@@ -64,6 +64,8 @@ On a supervised Omarchy test installation, run `python3 tests/integration_hermes
 
 ## Connect the parent iPhone
 
+For a family using personal computers, Tailscale has a free Personal plan; no paid subscription or router port forwarding is required for this design. See [the free-options comparison](docs/REMOTE-ACCESS.md) for current limits and alternatives. The current app supports Tailscale endpoints; NetBird and ZeroTier are alternatives to evaluate, not implemented replacements.
+
 1. Install and connect Tailscale on the phone and school computer using your own tailnet. Restrict access to the school's HTTPS service to parent devices with your tailnet access policy. Enable HTTPS certificates for that tailnet.
 2. On the school computer, start the private loopback relay and expose it through **Tailscale Serve**:
 
@@ -103,3 +105,7 @@ This release does **not** add a general screenshot-driven browser/computer agent
 ## Validation
 
 See `FAMILY-VALIDATION.md`. The screenshots are real renders of the SwiftUI and Qt source with explicitly labeled sample data, not screenshots from a deployed school computer or physical iPhone.
+
+## Sound and microphones in web apps
+
+The alpha.3 launcher includes a dedicated local audio connection for both playback and microphone input. Chromium retains its normal site microphone permissions. Local dictation remains separate and unchanged. Apply the updated installer and reopen web apps; see [audio diagnostics](docs/WEBAPP-AUDIO.md). Physical microphone/speaker validation is still pending.

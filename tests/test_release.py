@@ -51,6 +51,8 @@ bash "$1"
                 self.assertFalse(any('__pycache__' in n for n in names))
                 self.assertIn('omarchy-parent-controls/packaging/remove.py',names)
                 for relative in ('kids/hermes_cli.py', 'kids/coding.py', 'kids/family.py',
+                                 'kids/audio_proxy.py', 'native/pulse-client.conf',
+                                 'systemd/omarchy-kids-audio.socket', 'systemd/omarchy-kids-audio.service',
                                  'systemd/omarchy-kids-remote.service', 'packaging/install_voice.py',
                                  'voice/school_voice/parent_controls.py', 'voice/scripts/setup-desktop.py',
                                  'FAMILY.md', 'docs/validation/url-approval-validation.json'):

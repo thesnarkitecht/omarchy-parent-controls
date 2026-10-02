@@ -89,6 +89,15 @@ class UITests(unittest.TestCase):
         self.assertEqual(self.calls, [])
         self.assertEqual(self.desktop.actions, [])
 
+    def test_dictation_hotkey_records_and_transcribes_locally(self):
+        self.window.toggle('dictate')
+        self.assertTrue(self.window.recording)
+        self.window.toggle('dictate')
+        self.drain()
+        self.assertEqual(APP.clipboard().text(), 'open math')
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.desktop.actions, [])
+
     def test_revocation_while_laya_is_working(self):
         self.window.handle_text("Bring up math")
         self.policy["apps"].pop("math")

@@ -75,6 +75,14 @@ class ParentToolsTests(unittest.TestCase):
             command=run.call_args.args[0]
             self.assertIn('--app=https://grok.com/',command)
             self.assertTrue(any(x.startswith('--unit=omarchy-kids-webapp-x-ai-open-') for x in command))
+            unit=next(x.split('=',1)[1] for x in command if x.startswith('--unit='))
+            self.assertIn('--setenv=PULSE_SERVER=unix:/run/'+unit+'/pulse-native',command)
+            self.assertIn('--setenv=PULSE_CLIENTCONFIG=/usr/local/lib/omarchy-kids/pulse-client.conf',command)
+            self.assertIn('--property=InaccessiblePaths=/run/user',command)
+            mounts=next(x for x in command if x.startswith('--property=BindReadOnlyPaths='))
+            self.assertIn('/run/omarchy-kids-audio/native:/run/'+unit+'/pulse-native',mounts)
+            self.assertNotIn('/pulse/native',mounts)
+            self.assertNotIn('--no-sandbox',command)
 
     def test_running_windows_prevents_activation_without_terminating_guest(self):
         from types import SimpleNamespace

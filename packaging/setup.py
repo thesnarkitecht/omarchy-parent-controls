@@ -150,6 +150,10 @@ def main():
     copy(SOURCE/'integration/omarchy-kids.desktop','/usr/local/share/applications/omarchy-kids.desktop')
     copy(SOURCE/'integration/little-screen.desktop','/usr/local/share/applications/little-screen.desktop')
     copy(SOURCE/'native/video-input.conf',LIB/'video-input.conf')
+    copy(SOURCE/'native/pulse-client.conf',LIB/'pulse-client.conf')
+    copy(SOURCE/'systemd/omarchy-kids-audio.socket','/etc/systemd/system/omarchy-kids-audio.socket')
+    write('/etc/systemd/system/omarchy-kids-audio.service',
+          (SOURCE/'systemd/omarchy-kids-audio.service').read_text().replace('@CHILD_USER@', user.pw_name))
     copy(SOURCE/'systemd/omarchy-kids-remote.service','/etc/systemd/system/omarchy-kids-remote.service')
     copy(SOURCE/'native/approved-browser.desktop','/usr/local/share/applications/omarchy-kids-approved-browser.desktop')
     if config.get('hermes_binary'):
@@ -207,6 +211,8 @@ def main():
     denied=json.loads((ETC/'denied-commands.json').read_text()) if (ETC/'denied-commands.json').exists() else []
     write(ETC/'denied-commands.json',json.dumps(sorted((set(BANNED)|set(denied))-RUNTIME_COMMANDS),indent=2)+'\n')
     run('/usr/bin/systemctl','daemon-reload')
+    run('/usr/bin/systemctl','enable','--now','omarchy-kids-audio.socket')
+    run('/usr/bin/systemctl','try-restart','omarchy-kids-audio.service')
     run('/usr/bin/systemctl','enable','--now','omarchy-kids-control.service')
     run('/usr/bin/systemctl','restart','omarchy-kids-control.service')
     run('/usr/bin/systemctl','enable','--now','omarchy-kids-rollback.timer')

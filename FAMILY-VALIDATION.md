@@ -1,13 +1,13 @@
 # Family controls validation — 2026-10-02
 
-Source versions: Omarchy Parent Controls **0.5.0-alpha.2**, bundled voice **0.3.0**, Parent Pocket **0.1.1**. The prior standalone voice 0.2 bundle remains an older deliverable; use the integrated family bundle for this work.
+Source versions: Omarchy Parent Controls **0.5.0-alpha.3**, bundled voice **0.3.0**, Parent Pocket **0.1.1**. The prior standalone voice 0.2 bundle remains an older deliverable; use the integrated family bundle for this work.
 
 ## Checks completed
 
 | Check | Result |
 | --- | --- |
-| Parent-controls Python suite | 103 cases: 102 passed, 1 Linux-only bootstrap case skipped on macOS |
-| Integrated voice suite | 55 passed, including HTTPS certificate/redirect checks, bounded choice mapping, live approval replacement, wake-word behavior and parent disable |
+| Parent-controls Python suite | 109 cases: 108 passed, 1 Linux-only bootstrap case skipped on macOS |
+| Integrated voice suite | 56 passed, including HTTPS certificate/redirect checks, bounded choice mapping, live approval replacement, wake-word behavior and parent disable |
 | Laya service suite | 9 passed |
 | Swift pairing and cross-language protocol checks | 11 passed; decodes a real Python-generated status reply |
 | Real HTTP remote-approval flow | Child request → parent approval → removal passed against a persisted temporary Store; only the Linux Unix-socket transport was substituted |
@@ -19,7 +19,7 @@ Source versions: Omarchy Parent Controls **0.5.0-alpha.2**, bundled voice **0.3.
 | Omarchy QML syntax | Controls.qml and BarWidget.qml parsed with Qt qmlformat |
 | Visual review | SwiftUI parent Requests/Library/Controls rendered with AppKit hosting, plus the Qt child library; sample data only |
 
-**166 Python cases passed**, one platform-specific case skipped. The Swift and live-flow checks are additional. The integration tests do not authenticate to, modify, or enroll any real family's computer. Six new approval tests exercise optional names, URL normalization, exact-origin scope, duplicate handling, rejected schemes/credentials/local hosts, parent authentication and extra-field rejection. Current loopback TLS tests were rerun after granting this coding environment network permission; no socket failures were skipped.
+**173 Python cases passed**, one platform-specific case skipped. The Swift and live-flow checks are additional. The integration tests do not authenticate to, modify, or enroll any real family's computer. Six new approval tests exercise optional names, URL normalization, exact-origin scope, duplicate handling, rejected schemes/credentials/local hosts, parent authentication and extra-field rejection. Current loopback TLS tests were rerun after granting this coding environment network permission; no socket failures were skipped.
 
 Authorization tests cover wrong/revoked phone tokens, non-root pairing attempts, wrong-account child requests, expired requests, duplicate and conflicting reviews, mutation replay IDs, exact video-link parsing, playlist/channel rejection, website origin approval, immediate catalog removal on revocation, uninstalled native applications, and missing broker behavior. Relay tests cover browser Origin rejection, missing authorization, chunked/oversized/extra-field requests and secret-free responses. Video tests verify the fixed player argv and the stop trigger on revocation or broker failure; they do not run a Linux player.
 
@@ -38,3 +38,9 @@ The live routing evidence is in [app-selection-validation.json](docs/validation/
 No GitHub release, TestFlight upload or App Store submission was performed. Keep the alpha label until the hardware checks pass.
 
 The captured HTTP approval results are in [remote-approval-validation.json](docs/validation/remote-approval-validation.json) and [url-approval-validation.json](docs/validation/url-approval-validation.json). Parent Pocket previews and its build evidence refer to the separately delivered companion project.
+
+## Alpha.3 web-app audio update
+
+The repository suites were rerun: **164 passed, 1 Linux-only bootstrap case skipped**. The remaining 9 Python cases and companion iOS evidence above are retained from the unchanged Laya/Parent Pocket projects, rather than rerun for this audio change. Six new tests check large synthetic audio streams in both directions, bounded buffering/half-close behavior, rejection of unauthorized worker UIDs, the non-root service requirement, systemd socket activation and the socket-copy client configuration. Browser-launch coverage verifies the explicit audio endpoint while `/run/user` remains hidden. A seventh new test exercises simulated hotkey dictation through recording, transcription and clipboard delivery with no Laya request.
+
+The existing local VM endpoint refused its SSH connection, so no physical audio, Linux systemd audio service, real microphone permission flow or concurrent browser/dictation hardware test was performed. Run `sudo python3 tests/integration_audio.py` on an installed machine while the child is logged in, followed by the checks in [WEBAPP-AUDIO.md](docs/WEBAPP-AUDIO.md).

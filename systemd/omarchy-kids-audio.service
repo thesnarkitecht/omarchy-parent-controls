@@ -1,0 +1,24 @@
+[Unit]
+Description=Bridge approved web-app audio to the desktop
+Requires=omarchy-kids-audio.socket
+After=omarchy-kids-audio.socket
+
+[Service]
+# The installer fills in the controlled account; never run the bridge as root.
+User=@CHILD_USER@
+ExecStart=/usr/local/lib/omarchy-kids/run audio_proxy
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+LockPersonality=yes
+UMask=0077
+Restart=on-failure
+RestartSec=3

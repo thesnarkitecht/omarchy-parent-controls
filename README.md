@@ -1,6 +1,6 @@
 # Parent Controls for Omarchy
 
-**0.5.0-alpha.2 — source preview.** Includes URL-first approvals, a sandbox launcher for terminal Hermes, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [new validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. This source update does not publish a new release or deploy to school computers; Linux sandbox acceptance is still pending.
+**0.5.0-alpha.3 — source preview.** Restores managed web-app playback and microphone transport, and includes URL-first approvals, a sandbox launcher for terminal Hermes, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [new validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. This source update does not publish a new release or deploy to school computers; Linux sandbox acceptance is still pending.
 
 Keep the normal Omarchy desktop, with parent-approved webapps and a private parent PIN for administration.
 
@@ -16,6 +16,10 @@ Keep the normal Omarchy desktop, with parent-approved webapps and a private pare
 Normal terminal network requests work. Known browser-download hosts are blocked. General browsers, other AI launchers, communication apps and system package installers are hidden or denied. Runtime commands (`mise`, `uv`/`uvx`, `pip`/`pipx`, `npm`/`npx`, `pnpm`, and `yarn`) are allowed, including after upgrading older denylist settings. Downloaded native executables cannot run from the common writable directories covered by the policy.
 
 This is a set of practical guardrails for young children who know their login password. A terminal with networking remains powerful. Read [SECURITY.md](SECURITY.md) for the limits.
+
+Web-app speaker and microphone access use a dedicated local audio connection while School Voice dictation stays on the normal desktop audio service. See [audio setup and diagnostics](docs/WEBAPP-AUDIO.md).
+
+Remote parent access can use the free Tailscale Personal plan for eligible family use. [Compare free options](docs/REMOTE-ACCESS.md), including NetBird and ZeroTier.
 
 ## Requirements
 

@@ -59,10 +59,11 @@ def main():
         from family import revoke
         from control import Store
         revoke(Store())
-    for unit in ('omarchy-kids-remote','omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
+    for unit in ('omarchy-kids-audio.socket','omarchy-kids-audio.service','omarchy-kids-remote','omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
         run('/usr/bin/systemctl','disable','--now',unit,check=False)
     for path in Path('/etc/systemd/system').glob('omarchy-kids-*.service'): path.unlink()
     unlink('/etc/systemd/system/omarchy-kids-rollback.timer')
+    unlink('/etc/systemd/system/omarchy-kids-audio.socket')
     unlink('/etc/systemd/system/display-manager.service.d/omarchy-kids.conf')
     unlink('/etc/systemd/system/user@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf')
     unlink('/etc/systemd/system/user-runtime-dir@'+str(user.pw_uid)+'.service.d/omarchy-kids.conf')
