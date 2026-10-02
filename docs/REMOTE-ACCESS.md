@@ -2,7 +2,7 @@
 
 The new default is the managed encrypted relay in [`relay/`](../relay/README.md). The selected interim provider is Render Free, with an included `onrender.com` address and managed HTTPS. The optional Cloudflare adapter remains available. No VPN, custom domain, router forwarding, or server administration is required. A maintainer deploys it once; each laptop connects outward automatically after pairing. The parent app needs the corresponding protocol-v2 build.
 
-**Deployment is pending account access.** `remote-service.json` deliberately has no endpoint until a permanent deployment passes validation. The published alpha.6 release still uses the older direct HTTPS setup. Source changes alone do not activate a hosted service.
+**Relay deployed and verified on 2026-10-02:** `https://parent-pocket-relay.onrender.com`. The source pairing configuration now includes this verified origin. The published alpha.6 installer still uses the older direct HTTPS setup; the new connection remains part of the unreleased alpha.7 source and protocol-v2 Parent Pocket build.
 
 After activation: open the laptop lock icon → **Pair parent phone** → enter the parent PIN → scan with Parent Pocket. There is no URL to paste in normal pairing. `omarchy-parent-controls pair` does the same from a terminal. `omarchy-parent-controls unpair` revokes all phones; `omarchy-parent-controls resume` provides a PIN-authorized local recovery command.
 

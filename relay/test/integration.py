@@ -1,4 +1,4 @@
-"""Run against pnpm dev using disposable enrollment and no real devices."""
+"""Exercise a local or hosted relay using disposable enrollment, never real devices."""
 import sys,json,secrets,hashlib,time,threading,os
 from pathlib import Path
 from websockets.sync.client import connect
@@ -35,10 +35,12 @@ with device() as d:
   assert body['ok'] and len(body['videos'])==1
   print('PASS: real relay websocket roundtrip authenticates and applies encrypted command')
  with parent() as p:
-  d.close()
-  try:assert json.loads(p.recv(timeout=5))=={'error':'Computer offline'}
+  disconnected=time.monotonic(); d.close()
+  # Managed proxies can delay transport-close propagation. The server's
+  # 30-second heartbeat bounds dead-connection detection to two intervals.
+  try:assert json.loads(p.recv(timeout=65 if base.startswith('wss:') else 5))=={'error':'Computer offline'}
   except ConnectionClosed:pass
- print('PASS: device disconnect closes waiting parent connections')
+ print(f'PASS: device disconnect closes waiting parent connections ({time.monotonic()-disconnected:.1f}s)')
 time.sleep(.2)
 try:
  with parent():raise AssertionError('Offline device accepted')
