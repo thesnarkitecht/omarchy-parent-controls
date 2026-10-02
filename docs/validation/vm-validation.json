@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-02",
+  "version": "0.5.0-alpha.4",
+  "voice_version": "0.3.1",
+  "environment": {
+    "omarchy": "4.0.3-1",
+    "kernel": "7.2.6-1-aarch64-ARCH",
+    "architecture": "aarch64",
+    "vm": "cloned Try Omarchy disk under QEMU/HVF",
+    "display": "Hyprland software rendering",
+    "physical_audio_backend": false
+  },
+  "tests": {
+    "parent_controls": 113,
+    "voice": 64,
+    "skipped_on_linux": 0
+  },
+  "release_upgrade": true,
+  "reboot_checks": [
+    {
+      "hidden_authority": true,
+      "no_new_privileges": true,
+      "no_capabilities": true,
+      "nested_userns_denied": true,
+      "system_readonly": true,
+      "project_exec": true,
+      "venv": true,
+      "git": true
+    },
+    {
+      "worker_connected": true,
+      "playback_devices": 1,
+      "input_or_monitor_devices": 2,
+      "non_monitor_inputs": 1
+    },
+    {
+      "worker_playback_and_capture": true,
+      "captured_frames": 31200,
+      "peak": 6002,
+      "tone_hz": 440,
+      "physical_devices_used": false
+    }
+  ],
+  "browser_playback": [
+    {
+      "browser_playback_non_silent": true,
+      "rms_pcm16": 7176.85,
+      "frames": 32000,
+      "source": "Chromium managed webapp via production audio proxy"
+    }
+  ],
+  "browser_microphone": [
+    {
+      "application": "Chromium input",
+      "user": "omarchy-kids",
+      "source": 53,
+      "corked": false
+    }
+  ],
+  "qt_dictation": [
+    {
+      "qt_dictation_toggle_record_transcribe_clipboard": true,
+      "text": "Today I practiced multiplication and finished my science project.",
+      "local_session_unlocked_verified": true,
+      "laya_called": false
+    }
+  ],
+  "wake_and_actions": {
+    "live_wake_capture": [
+      "armed",
+      "awake",
+      "audio"
+    ],
+    "transcript": "layer, open calculator.",
+    "approved_calculator_open_focus_maximize_restore_close": true,
+    "workspace_switch": true,
+    "laya_transport_exercised": false,
+    "action_adapter_called_with_single_local_candidate": true
+  },
+  "remote_approval": [
+    {
+      "real_unix_broker_and_systemd_http_relay": true,
+      "child_cannot_pair_parent": true,
+      "wrong_token_rejected": true,
+      "remote_disable_controls_rejected": true,
+      "child_request_parent_approval": true,
+      "youtube_browsing_and_playlist_rejected": true,
+      "individual_video_add_remove": true,
+      "tailscale_and_iphone_tested": false
+    }
+  ],
+  "limitations": [
+    "No physical speakers or microphone were used",
+    "No Laya host/network command request",
+    "No Tailscale or physical iPhone test",
+    "No real YouTube playback",
+    "Voice hotkey keyboard events and lock/unlock not exercised"
+  ]
+}

@@ -10,7 +10,19 @@ import secrets
 import subprocess
 
 
-def query(*arguments):
+def is_microphone(source):
+    """Recognize pactl's named monitor_source and older indexed schemas."""
+    properties = source.get('properties', {})
+    if properties.get('device.class') == 'monitor' or source.get('name', '').endswith('.monitor'):
+        return False
+    if 'monitor_source' in source:
+        return source['monitor_source'] in (None, '')
+    if 'monitor_of_sink' in source:
+        return source['monitor_of_sink'] in (None, 4294967295, '4294967295')
+    return properties.get('media.class') in ('Audio/Source', 'Audio/Source/Virtual')
+
+
+def worker_command(*arguments):
     unit = 'omarchy-kids-audio-check-' + secrets.token_hex(4)
     command = ['/usr/bin/systemd-run', '--quiet', '--wait', '--pipe', '--collect', '--unit=' + unit,
                '--property=User=omarchy-kids', '--property=Group=omarchy-kids',
@@ -23,8 +35,13 @@ def query(*arguments):
                '--setenv=HOME=/var/lib/omarchy-kids/data', '--setenv=XDG_RUNTIME_DIR=/run/' + unit,
                '--setenv=PULSE_SERVER=unix:/run/' + unit + '/pulse-native',
                '--setenv=PULSE_CLIENTCONFIG=/usr/local/lib/omarchy-kids/pulse-client.conf',
-               '/usr/bin/pactl', *arguments]
-    return subprocess.run(command, check=True, capture_output=True, text=True, timeout=20).stdout
+               *arguments]
+    return command
+
+
+def query(*arguments):
+    return subprocess.run(worker_command('/usr/bin/pactl', *arguments), check=True,
+                          capture_output=True, text=True, timeout=20).stdout
 
 
 def main():
@@ -37,8 +54,7 @@ def main():
     sources = json.loads(query('--format=json', 'list', 'sources'))
     assert sinks, 'The desktop audio service has no playback devices.'
     assert sources, 'The desktop audio service has no input/monitor devices.'
-    # PulseAudio's invalid index denotes a physical/non-monitor source.
-    microphones = [s for s in sources if s.get('monitor_of_sink') in (None, 4294967295, '4294967295')]
+    microphones = [s for s in sources if is_microphone(s)]
     print(json.dumps({'worker_connected': True, 'playback_devices': len(sinks),
                       'input_or_monitor_devices': len(sources), 'non_monitor_inputs': len(microphones)}))
     if not microphones:

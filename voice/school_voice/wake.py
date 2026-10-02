@@ -7,6 +7,7 @@ import tempfile
 import threading
 
 from .policy import trusted_file
+from .capture import input_rate, input_stream
 
 MODEL_FILES = {
     "encoder": "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
@@ -166,13 +167,12 @@ class WakeListener:
         try:
             import av
             import numpy as np
-            import sounddevice as sd
             detector = Detector(self.config)
             if self.stopped.is_set():
                 return
             frames = queue.Queue(maxsize=20)
             overflow = threading.Event()
-            rate = int(sd.query_devices(kind="input")["default_samplerate"])
+            rate = input_rate()
             resampler = av.AudioResampler(format="flt", layout="mono", rate=16000)
             pending = np.empty(0, dtype="float32")
             def capture(data, count, timing, status):
@@ -182,7 +182,7 @@ class WakeListener:
                     frames.put_nowait(data[:, 0].copy())
                 except queue.Full:
                     overflow.set()
-            with sd.InputStream(samplerate=rate, channels=1, dtype="float32",
+            with input_stream(samplerate=rate,
                                 blocksize=max(1, int(rate * .04)), callback=capture) as stream:
                 self.stream = stream
                 if self.stopped.is_set():

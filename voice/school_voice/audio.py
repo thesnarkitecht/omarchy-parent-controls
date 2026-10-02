@@ -1,6 +1,7 @@
 """Local-only audio capture, bounded in memory, never sent to Laya or saved."""
 import os
 import threading
+from .capture import CaptureStopped, input_rate, input_stream
 
 
 class Recorder:
@@ -15,24 +16,23 @@ class Recorder:
         self.lock = threading.Lock()
 
     def start(self):
-        import sounddevice as sd
         import numpy as np
         self.blocks, self.frames, self.level, self.error = [], 0, 0.0, None
-        self.rate = int(sd.query_devices(kind="input")["default_samplerate"])
+        self.rate = input_rate()
         def callback(data, frames, timing, status):
             if status:
                 self.error = "Microphone audio was interrupted. Please try again."
             with self.lock:
                 remaining = self.maximum * self.rate - self.frames
                 if remaining <= 0:
-                    raise sd.CallbackStop
+                    raise CaptureStopped
                 chunk = data[:remaining, 0].copy()
                 self.blocks.append(chunk)
                 self.frames += len(chunk)
                 self.level = float(np.sqrt(np.mean(chunk ** 2))) if len(chunk) else 0.0
                 if self.frames >= self.maximum * self.rate:
-                    raise sd.CallbackStop
-        self.stream = sd.InputStream(samplerate=self.rate, channels=1, dtype="float32", callback=callback)
+                    raise CaptureStopped
+        self.stream = input_stream(samplerate=self.rate, callback=callback)
         self.stream.start()
 
     def stop(self):

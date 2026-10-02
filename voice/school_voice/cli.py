@@ -103,8 +103,14 @@ def doctor():
     for binary in ("hyprctl", "wpctl", "playerctl"):
         if not (Path("/usr/bin") / binary).is_file():
             raise ValueError("Missing desktop dependency: " + binary)
-    import sounddevice as sd
-    print("Microphone:", sd.query_devices(kind="input")["name"])
+    if sys.platform == 'linux':
+        from .capture import default_source
+        for binary in ('pactl', 'parec'):
+            trusted_file(Path('/usr/bin') / binary)
+        print('Microphone:', default_source(), '(local PulseAudio, 16 kHz mono)')
+    else:
+        import sounddevice as sd
+        print("Microphone:", sd.query_devices(kind="input")["name"])
     print("Approved actions:", ", ".join(catalog(policy)))
     print("Local checks passed. Use a real voice command to test the paired Laya service.")
 

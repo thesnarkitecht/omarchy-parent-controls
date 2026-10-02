@@ -43,13 +43,27 @@ class Desktop:
         if reply.lower() != "ok":
             raise ValueError("Hyprland did not accept the action: " + reply[:160])
 
+    @staticmethod
+    def matches(app, window):
+        if 'unit' not in app:
+            return window.get('class') in app['classes']
+        # Wayland Chromium app windows ignore --class and derive app_id from
+        # their URL. Bind voice targeting to the root-managed systemd service,
+        # not a guessed class or a title another window could share.
+        pid, unit = window.get('pid'), app['unit']
+        if type(pid) is not int or pid <= 0 or not re.fullmatch(r'omarchy-kids-webapp-[a-z0-9-]+\.service', unit):
+            return False
+        try:
+            return '0::/system.slice/' + unit in Path(f'/proc/{pid}/cgroup').read_text().splitlines()
+        except OSError:
+            return False
+
     def checked_target(self, policy, target):
         address = target.get("address", "")
         if not re.fullmatch(r"0x[0-9a-fA-F]+", address):
             raise ValueError("Choose an approved application window first")
-        allowed = {c for app in policy["apps"].values() for c in app["classes"]}
         for window in self.clients():
-            if window.get("address") == address and window.get("pid") == target.get("pid") and window.get("class") == target.get("class") and window.get("class") in allowed:
+            if window.get("address") == address and window.get("pid") == target.get("pid") and window.get("class") == target.get("class") and any(self.matches(app, window) for app in policy['apps'].values()):
                 return address
         raise ValueError("That window has changed or is not approved for voice control")
 
@@ -63,7 +77,7 @@ class Desktop:
             self.launcher(list(app["argv"]))
         elif action.startswith("focus_"):
             app = p["apps"][action[6:]]
-            window = next((w for w in self.clients() if w.get("class") in app["classes"]), None)
+            window = next((w for w in self.clients() if self.matches(app, w)), None)
             if not window:
                 raise ValueError("That app isn't open. Say “open " + app["aliases"][0] + "”.")
             address = self.checked_target(p, window)

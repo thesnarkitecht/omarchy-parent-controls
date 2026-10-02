@@ -8,7 +8,7 @@ The browser still cannot access the rest of `/run/user`, the desktop session bus
 
 The endpoint carries both playback and capture. It is not a playback-only filter. Websites remain subject to Chromium's existing microphone permission prompts; the fix does not automatically grant every website microphone access. The worker has audio-service access, including the normal Pulse control surface, so this is not a per-site audio security boundary. No such endpoint is added to the sandboxed Hermes CLI.
 
-School Voice dictation continues to run as the child and use the normal local audio service. Its microphone device, mute state, wake word, transcription and clipboard behavior are not redirected through the browser bridge. The regression suite includes the full simulated dictation hotkey → recording → local transcription → clipboard flow, without a model request or desktop command.
+School Voice dictation continues to run as the child and use the normal local audio service. Its microphone device, mute state, wake word, transcription and clipboard behavior are not redirected through the browser bridge. Since alpha.4 it captures through the desktop PulseAudio service directly, avoiding the ALSA sample loss reproduced in the VM. The regression suite includes the full simulated dictation hotkey → recording → local transcription → clipboard flow, without a model request or desktop command.
 
 ## Apply the update
 
@@ -37,6 +37,12 @@ If audio remains unavailable, inspect `sudo journalctl -u omarchy-kids-audio.ser
 
 ## Validation limits
 
-Local tests exercise multi-megabyte synthetic playback and microphone bytes, backpressure, half-close replies, rejected peers, non-root service identity and the browser launch configuration. The local dictation tests pass with a simulated microphone/transcriber. The existing local Omarchy VM's SSH endpoint was unavailable during this change, so the systemd service, actual speakers/microphone, Chromium permission flow and simultaneous browser audio plus dictation still require the included target-machine check. No claim of audible hardware verification is made.
+The alpha.4 Omarchy VM run verified the actual systemd bridge, Chromium playback, Chromium's microphone permission flow and a synthetic playback/capture round trip. It also verified live local dictation and clipboard delivery after fixing the ALSA capture issue. See [the VM report](../FAMILY-VALIDATION.md) for the exact scope and remaining hardware checks.
 
-References: [PipeWire's Pulse server](https://docs.pipewire.org/page_module_protocol_pulse.html) and [Pulse client transport settings](https://man.archlinux.org/man/pulse-client.conf.5.en).
+For a synthetic transport test that neither records a real microphone nor plays through real speakers, run:
+
+```bash
+sudo python3 tests/integration_audio_stream.py
+```
+
+This creates a temporary virtual sink, verifies a 440 Hz tone through the worker's production audio socket, and removes the sink. It leaves desktop default devices unchanged.

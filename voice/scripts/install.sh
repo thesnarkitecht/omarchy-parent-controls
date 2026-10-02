@@ -18,7 +18,7 @@ if [[ -e /etc/school-voice/policy.json ]]; then
   echo "An installation exists. Preserve its parent policy; follow README update instructions." >&2
   exit 1
 fi
-pacman -S --needed --noconfirm python python-pip portaudio libxcb libxkbcommon libxkbcommon-x11 xcb-util-cursor playerctl wireplumber
+pacman -S --needed --noconfirm python python-pip portaudio libpulse libxcb libxkbcommon libxkbcommon-x11 xcb-util-cursor playerctl wireplumber
 install -d -m 0755 /opt/school-voice /etc/school-voice
 python -m venv /opt/school-voice/venv
 /opt/school-voice/venv/bin/python -m pip install "$source_dir"

@@ -1,6 +1,6 @@
 # Parent Controls, now with voice and Little Screen
 
-This is the **0.5.0-alpha.3 source preview**. It extends the existing Omarchy Parent Controls project with URL-first approvals and a managed Hermes coding sandbox. No school computers were changed, and no release was published to GitHub.
+This is the **0.5.0-alpha.4 source preview**. It extends the existing Omarchy Parent Controls project with URL-first approvals and a managed Hermes coding sandbox. No school computers were changed, and no release was published to GitHub.
 
 ## What belongs where
 
@@ -108,4 +108,4 @@ See `FAMILY-VALIDATION.md`. The screenshots are real renders of the SwiftUI and 
 
 ## Sound and microphones in web apps
 
-The alpha.3 launcher includes a dedicated local audio connection for both playback and microphone input. Chromium retains its normal site microphone permissions. Local dictation remains separate and unchanged. Apply the updated installer and reopen web apps; see [audio diagnostics](docs/WEBAPP-AUDIO.md). Physical microphone/speaker validation is still pending.
+The launcher includes a dedicated local audio connection for both playback and microphone input. Chromium retains its normal site microphone permissions. Local dictation uses a separate PulseAudio capture stream. VM testing found and fixed truncated audio through the previous ALSA capture path. Apply the updated installer and reopen web apps; see [audio diagnostics](docs/WEBAPP-AUDIO.md). Physical microphone/speaker validation is still pending.

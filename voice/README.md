@@ -40,6 +40,8 @@ The sample policy uses current Lua-based Omarchy. Set `hyprland` to `legacy` bef
 | Super + Alt + D | Start/finish dictation; transcript goes to the clipboard |
 | Escape while the window is focused | Cancel |
 
+On Linux, dictation and wake listening capture 16 kHz mono audio through the desktop PulseAudio service (`parec`, provided by `libpulse`). This avoids the PortAudio/ALSA capture problem reproduced in the Omarchy VM. The selected input is resolved when recording starts; no audio file or network transcription service is used.
+
 Wake mode keeps the microphone open **locally** for keyword detection. A persistent tray icon shows the actual state. If the desktop has no system tray, the window stays visible. Muting closes the microphone, blocks recording hotkeys, and persists across restarts. Resume with the button or Super+Alt+M; a muted microphone cannot hear an unmute command.
 
 After “Hey Laya,” a short ready chime sounds. Speak naturally; voice activity detection finishes after about 0.9 seconds of silence. The app does not ask for confirmation. A wake with no command times out after four seconds. A wake command longer than 15 seconds is discarded. Done/error tones provide feedback. Hotkey recording still supports pressing again to finish.
@@ -69,7 +71,7 @@ Edit `/etc/school-voice/policy.json` as an administrator. The app reloads it bef
 
 The host also has a per-device action allowlist. If adding an app, update both the local policy and that device's action IDs in the host `server.json`, then restart the host. Removals on the client take effect immediately. Workspace IDs are restricted to the parent's list. Volume increases cap at 80%; this is a software volume limit, not a calibrated hearing-safety guarantee.
 
-Closing, maximizing, or restoring targets the approved app window captured before recording. The address, process ID, and window class are checked again before execution. It cannot close a terminal or parent window unless a parent explicitly adds that class. Closing happens immediately, as requested; an application's own unsaved-document dialog may still appear.
+Closing, maximizing, or restoring targets the approved app window captured before recording. The address, process ID, and window class are checked again before execution. Managed Chromium windows must also belong to the parent-approved systemd service, because Wayland generates their window classes from URLs. It cannot close a terminal or parent window unless a parent explicitly approves that application. Closing happens immediately, as requested; an application's own unsaved-document dialog may still appear.
 
 ## Wake phrase and sensitivity
 

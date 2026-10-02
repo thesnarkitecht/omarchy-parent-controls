@@ -63,6 +63,8 @@ def validate(data: dict) -> dict:
             raise ValueError('App purpose must be a short parent-managed description')
         if not isinstance(app.get("classes"), list) or not app["classes"] or not all(isinstance(c, str) and 0 < len(c) <= 128 for c in app["classes"]):
             raise ValueError("App needs exact Hyprland window classes")
+        if 'unit' in app and (not isinstance(app['unit'], str) or not re.fullmatch(r'omarchy-kids-webapp-[a-z0-9-]+\.service', app['unit'])):
+            raise ValueError('Invalid managed web-app service')
         if not isinstance(app.get("aliases"), list) or not app["aliases"] or not all(isinstance(a, str) and 0 < len(a) <= 80 for a in app["aliases"]):
             raise ValueError("App needs spoken aliases")
     if not isinstance(data.get("actions"), list) or not all(x in FIXED for x in data["actions"]):

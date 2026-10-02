@@ -298,7 +298,8 @@ def voice_catalog(store):
     for app in policy['webapps']:
         key = 'web_' + app['id'].replace('-', '_')
         apps[key] = {'label': app['name'], 'argv': ['/usr/local/bin/omarchy-kids-webapp', app['id']],
-                     'classes': ['omarchy-webapp-' + app['id']], 'aliases': [app['name']]}
+                     'classes': ['omarchy-webapp-' + app['id']], 'aliases': [app['name']],
+                     'unit': 'omarchy-kids-webapp-' + app['id'] + '.service'}
     purposes = {'editor': 'writing stories, letters and notes', 'calculator': 'calculating sums and multiplication',
                 'math': 'practicing math, arithmetic and fractions', 'videos': 'watching parent-picked videos',
                 'tuxpaint': 'drawing and painting pictures', 'gcompris': 'educational activities and learning games',

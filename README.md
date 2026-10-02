@@ -1,6 +1,6 @@
 # Parent Controls for Omarchy
 
-**0.5.0-alpha.3 — source preview.** Restores managed web-app playback and microphone transport, and includes URL-first approvals, a sandbox launcher for terminal Hermes, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [new validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. This source update does not publish a new release or deploy to school computers; Linux sandbox acceptance is still pending.
+**0.5.0-alpha.4 — source preview.** Validates Linux sandbox isolation and web-app audio in an Omarchy VM, fixes local voice capture and Wayland web-app targeting, and includes URL-first approvals, a sandbox launcher for terminal Hermes, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [new validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. This source update does not publish a new release or deploy to school computers; Physical school-machine and iPhone testing remains pending.
 
 Keep the normal Omarchy desktop, with parent-approved webapps and a private parent PIN for administration.
 

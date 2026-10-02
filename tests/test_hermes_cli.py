@@ -27,12 +27,29 @@ class HermesSandboxTests(unittest.TestCase):
                          [('/agent-state', '/home/agent/.hermes'), ('/workspace-source', '/workspace')])
         self.assertNotIn(('/etc', '/etc'), binds)
         for source, target in binds:
+            # Arch's systemd-resolved stores this one DNS file under /run.
+            # Binding it read-only does not expose its parent or any sockets.
+            if target == '/etc/resolv.conf':
+                self.assertEqual(source, str(Path(target).resolve()))
+                self.assertIn(['--ro-bind', source, target],
+                              [argv[i:i + 3] for i in range(len(argv) - 2)])
+                continue
             self.assertFalse(source.startswith(('/run/', '/home/', '/var/lib/omarchy-kids-control')))
         self.assertIn('--clearenv', argv)
         for flag in ('--unshare-user', '--unshare-pid', '--unshare-ipc', '--unshare-uts',
                      '--disable-userns', '--new-session', '--die-with-parent'):
             self.assertIn(flag, argv)
         self.assertEqual(argv[argv.index('--cap-drop') + 1], 'ALL')
+
+    def test_resolved_dns_file_does_not_expose_runtime_directory(self):
+        dns = Path('/run/systemd/resolve/stub-resolv.conf')
+        with patch.object(cli.Path, 'exists', return_value=True), \
+             patch.object(cli.Path, 'resolve', autospec=True,
+                          side_effect=lambda p: dns if p == Path('/etc/resolv.conf') else p):
+            argv = self.argv()
+        binds = [argv[i:i + 3] for i, arg in enumerate(argv) if arg in ('--bind', '--ro-bind')]
+        self.assertIn(['--ro-bind', str(dns), '/etc/resolv.conf'], binds)
+        self.assertFalse(any(item[1] in ('/run', '/run/systemd', '/run/systemd/resolve') for item in binds))
 
     def test_environment_drops_session_and_injection_settings(self):
         hostile = {name: 'sentinel-' + name for name in ('LD_PRELOAD', 'PYTHONPATH', 'BASH_ENV',
