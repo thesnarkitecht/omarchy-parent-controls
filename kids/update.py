@@ -178,7 +178,7 @@ def main():
     sub = parser.add_subparsers(dest='action', required=True)
     sub.add_parser('version', help='Show the installed version')
     sub.add_parser('status', help='Show control and service status')
-    pair = sub.add_parser('pair', help='Show a pairing QR for the parent phone (parent PIN required)')
+    pair = sub.add_parser('pair', help='Show a temporary pairing code for the parent phone (parent PIN required)')
     pair.add_argument('--wait', action='store_true', help='Keep the pairing screen open')
     sub.add_parser('resume', help='Resume a paused laptop using the parent PIN')
     sub.add_parser('unpair', help='Disconnect all parent phones (parent PIN required)')

@@ -87,7 +87,7 @@ def public(store):
     state = read(store)
     from activity import summary
     from access_control import status as access_status
-    return {"screen_time": summary(store.path), "access": access_status(), "paired_phones": len(state['phones']), "name": state['name'], "requests": state['requests'], "videos": state['videos'],
+    return {"screen_time": summary(store.path), "access": access_status(), "paired_phones": sum(1 for p in state['phones'] if 'pairing_expires' not in p), "name": state['name'], "requests": state['requests'], "videos": state['videos'],
             "voice": state['voice'], "policy": store.read('policy.json'),
             "controlled": Path('/etc/omarchy-kids/controlled-on').exists(),
             "requestable_apps": [{'id': key, 'name': app['name']} for key, app in CATALOG.items() if Path(app['binary']).is_file()],
@@ -102,9 +102,14 @@ def parent_origin(endpoint):
     return normalized
 
 
-def enroll(store, endpoint, name, relay=None):
+def enroll(store, endpoint, name, relay=None, temporary=False):
     endpoint = parent_origin(endpoint)
     state = read(store)
+    if type(temporary) is not bool:
+        raise ValueError('Invalid pairing mode.')
+    # Starting a fresh code invalidates older unclaimed codes on this laptop.
+    state['phones'] = [p for p in state['phones'] if 'pairing_expires' not in p or
+                       (not temporary and p['pairing_expires'] > store.clock())]
     if len(state['phones']) >= 8:
         raise ValueError("Revoke an old phone before pairing another.")
     token, key = secrets.token_urlsafe(32), secrets.token_hex(16)
@@ -117,10 +122,12 @@ def enroll(store, endpoint, name, relay=None):
             raise ValueError('Invalid remote connection configuration.')
         from sealed_remote import keys
         record['keys'] = keys(token, key)
+    if temporary:
+        record['pairing_expires'] = int(store.clock()) + 300
     state['phones'].append(record)
     store.save('family.json', state)
     return {'version': 2 if relay else 1, 'id': key, 'name': state['name'], 'endpoint': endpoint,
-            'token': token, **(relay or {})}
+            'token': token, **(relay or {}), **({'expires': record['pairing_expires']} if temporary else {})}
 
 
 def revoke(store):
@@ -268,7 +275,7 @@ def remote(store, envelope):
         raise ValueError("Pair this phone first.")
     digest = hashlib.sha256(token.encode()).hexdigest()
     phone = next((p for p in state['phones'] if hmac.compare_digest(p['hash'], digest)), None)
-    if phone is None:
+    if phone is None or phone.get('pairing_expires', store.clock() + 1) <= store.clock():
         raise ValueError("Pair this phone first.")
     rid, issued = envelope['id'], envelope['issued']
     if not isinstance(rid, str) or not re.fullmatch(r'[0-9a-f]{32}', rid) or type(issued) is not int or abs(store.clock() - issued) > 60:
@@ -279,7 +286,12 @@ def remote(store, envelope):
     if operation == 'status':
         if fields:
             raise ValueError("Invalid status request.")
+        if 'pairing_expires' in phone:
+            del phone['pairing_expires']
+            store.save('family.json', state)
         return public(store)
+    if 'pairing_expires' in phone:
+        raise ValueError('Finish pairing this phone before making changes.')
     fingerprint = hashlib.sha256(__import__('json').dumps([operation, fields], sort_keys=True).encode()).hexdigest()
     state['receipts'] = [r for r in state['receipts'] if r['time'] > store.clock() - 300]
     for receipt in state['receipts']:

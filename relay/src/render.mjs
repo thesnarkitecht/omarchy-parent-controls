@@ -6,18 +6,28 @@ import {pathToFileURL} from 'node:url';
 import {isIP} from 'node:net';
 import {WebSocketServer, WebSocket} from 'ws';
 import {Room} from './worker.mjs';
+import {PairingInbox} from './pairings.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
 const credential = /^[A-Za-z0-9_-]{43}$/;
 const reject = (socket, code) => { socket.end(`HTTP/1.1 ${code} Rejected\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`); };
 
+const sourceIP = req => {
+  const forwarded = process.env.RENDER ? req.headers['x-forwarded-for']?.split(',').at(-1)?.trim() : null;
+  return isIP(forwarded || '') ? forwarded : req.socket.remoteAddress;
+};
+
 export function createRelay() {
+  const pairingInbox = new PairingInbox();
   const rooms = new Map(), attempts = new Map();
   const devices = new WebSocketServer({noServer:true, maxPayload:1_400_000, perMessageDeflate:false});
   const parents = new WebSocketServer({noServer:true, maxPayload:18000, perMessageDeflate:false});
   const server = http.createServer((req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json');
+    if (req.url === '/v2/pairings' || req.url === '/v2/pairings/redeem') {
+      void pairingInbox.handle(req,res,sourceIP(req)); return;
+    }
     if (req.method === 'GET' && req.url === '/health') {
       res.end(JSON.stringify({service:'parent-pocket-relay',version:2}));
     } else { res.statusCode=404; res.end('{"error":"Not found"}'); }
@@ -28,8 +38,7 @@ export function createRelay() {
     const route = /^\/v2\/(device|parent)\/([0-9a-f]{64})$/.exec(req.url || '');
     const token = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(req.headers.authorization || '')?.[1];
     if (!route || req.method !== 'GET' || req.headers.origin || !credential.test(token || '')) return reject(socket,401);
-    const forwarded = process.env.RENDER ? req.headers['x-forwarded-for']?.split(',').at(-1)?.trim() : null;
-    const ip = isIP(forwarded || '') ? forwarded : socket.remoteAddress;
+    const ip = sourceIP(req);
     const now = Date.now();
     if (attempts.size > 2048) return reject(socket,429);
     let attempt = attempts.get(ip);
@@ -87,6 +96,7 @@ export function createRelay() {
   });
   const heartbeat = setInterval(() => {
     const now=Date.now();
+    pairingInbox.prune();
     for (const [key,value] of attempts) if (now-value.start > 60000) attempts.delete(key);
     for (const room of rooms.values()) for (const ws of room.sockets) {
       if (ws.readyState !== WebSocket.OPEN || !ws.alive) { ws.terminate(); continue; }
