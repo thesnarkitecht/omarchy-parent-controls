@@ -70,7 +70,7 @@ The new managed connection requires the protocol-v2 Parent Pocket build and an a
 2. Enter the parent PIN. Scan the QR in Parent Pocket on your iPhone.
 3. The connection starts automatically and reconnects when the laptop comes online. No VPN, port forwarding, domain purchase, or per-laptop URL setup.
 
-`omarchy-parent-controls pair` opens the same flow from a terminal. Keep the QR private: it grants parent access. The root broker stores its token hash and derived encryption keys. The connector and Cloudflare relay cannot decrypt parent commands.
+`omarchy-parent-controls pair` opens the same flow from a terminal. Keep the QR private: it grants parent access. The root broker stores its token hash and derived encryption keys. The connector and hosted relay cannot decrypt parent commands.
 
 The phone can approve pasted app URLs, approve individual videos, review child requests, change voice settings, see approximate daily/week unlocked desktop usage, and Pause/Resume access. Pause freezes running work in memory and blocks child login; it persists across reboot, although reboot itself does not preserve unsaved work. Screen time uses logind activity/idle/lock signals; it is approximate total desktop time, not per-app history or tamperproof accounting.
 

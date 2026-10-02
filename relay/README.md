@@ -39,3 +39,5 @@ The iPhone app must include protocol v2 support from the separate Parent Pocket 
 `pnpm test` checks both adapters, including actual Node sockets, routing and rejection logic. `pnpm start` starts the Render runtime on port 8788; run `RELAY_TEST_URL=ws://127.0.0.1:8788 python test/integration.py` for the encrypted acceptance test. `pnpm dev` starts the real local Workers runtime. `python3 test/integration.py` then exercises real sockets, broker encryption, offline behavior, reconnection, and revocation with disposable credentials. Swift/Python interoperability is additionally checked by Parent Pocket's `Tests/SealedChecks.swift`. Local runtime checks do not replace a deployed TLS round trip or physical-device acceptance.
 
 References: [WebSocket hibernation](https://developers.cloudflare.com/durable-objects/best-practices/websockets/), [free-plan quotas](https://developers.cloudflare.com/durable-objects/platform/pricing/).
+
+The optional GitHub Actions template is in `ci/github-actions.yml.example`. Checks were run locally; automated relay CI is not enabled by this branch because the connected GitHub authorization cannot install workflows.
