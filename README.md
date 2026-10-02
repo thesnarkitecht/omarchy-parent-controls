@@ -1,6 +1,6 @@
 # Parent Controls for Omarchy
 
-**0.5.0-alpha.6 — preview release.** Includes a curl installer, parent-authorized CLI updates, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [VM validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. Physical school-machine and iPhone testing remains pending.
+**0.5.0-alpha.7 — preview release.** Adds temporary pairing codes, encrypted remote access, Pause/Resume and screen-time totals. Includes a curl installer, parent-authorized CLI updates, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [VM validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. Physical school-machine and iPhone testing remains pending.
 
 Keep the normal Omarchy desktop, with parent-approved webapps and a private parent PIN for administration.
 
@@ -19,7 +19,7 @@ This is a set of practical guardrails for young children who know their login pa
 
 Web-app speaker and microphone access use a dedicated local audio connection while School Voice dictation stays on the normal desktop audio service. See [audio setup and diagnostics](docs/WEBAPP-AUDIO.md).
 
-The encrypted managed relay is deployed and verified, with no VPN or router setup. [Deployment status and pairing](docs/REMOTE-ACCESS.md). The published alpha.6 installer does not yet include this unreleased connection.
+The encrypted managed relay is deployed and verified, with no VPN or router setup. [Deployment status and pairing](docs/REMOTE-ACCESS.md). The alpha.7 installer includes the managed connection and temporary pairing codes.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ The encrypted managed relay is deployed and verified, with no VPN or router setu
 Run this in a terminal on the child's Omarchy computer:
 
 ```bash
-curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.5.0-alpha.6/bootstrap.sh | bash
+curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.5.0-alpha.7/bootstrap.sh | bash
 ```
 
 This version-pinned preview installer verifies the release archive's SHA-256 before extracting it. The installer reads passwords from the terminal, so piping it from curl works. To review first, download `bootstrap.sh`, read it, then run `bash bootstrap.sh`. To pass setup options through the pipeline, use `bash -s -- --with-hermes` (or `--voice-pairing /path/to/pairing`) in place of `bash`. From a root terminal, also pass `--user CHILD_USERNAME`.

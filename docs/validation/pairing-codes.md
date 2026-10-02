@@ -11,8 +11,8 @@ Validated on 2026-10-02:
 - Python-generated enrollment decrypted and validated by Swift CryptoKit; wrong/expired/short codes rejected.
 - iPhone Simulator build succeeded. Xcode launched the updated app on iPhone 18 Pro. Device Hub UI inspection timed out, so Simulator interaction itself has not been accepted as tested. A rendered SwiftUI pairing preview was visually reviewed separately.
 
-The public installer remains alpha.6; the source changes belong to the unreleased alpha.7. Existing live pairings remain compatible. Physical-laptop and iPhone acceptance remains outstanding.
+These changes are included in the alpha.7 preview installer. Existing live pairings remain compatible. Physical-laptop and iPhone acceptance remains outstanding.
 
-Hosted acceptance passed against Render commit `2540996d7a870a3702813232759144aa8a7979a9`: actual laptop publication code, actual Swift redemption, encrypted root-broker status activation, and rejection of a second redemption. Credentials were disposable and revoked afterward. Reproduce with `relay/test/integration_pairing.py` and the compiled Parent Pocket `Tests/HostedPairingChecks.swift` client. The alpha.7 archive was rebuilt with this refinement but remains unpublished.
+Hosted acceptance passed against Render commit `2540996d7a870a3702813232759144aa8a7979a9`: actual laptop publication code, actual Swift redemption, encrypted root-broker status activation, and rejection of a second redemption. Credentials were disposable and revoked afterward. Reproduce with `relay/test/integration_pairing.py` and the compiled Parent Pocket `Tests/HostedPairingChecks.swift` client. The alpha.7 archive was rebuilt with this refinement for alpha.7 publication.
 
-Render was manually deployed to that explicit commit. Automatic deploys remain off. Until this PR is merged and the service is pointed at the desired branch, use explicit commits for future relay deploys; Deploy latest commit on the old `codex/managed-parent-relay` branch would roll back short-code support.
+Render was manually deployed to that explicit commit. Automatic deploys remain off. Until the service is pointed at the desired branch, use explicit commits for future relay deploys; Deploy latest commit on the old `codex/managed-parent-relay` branch would roll back short-code support.

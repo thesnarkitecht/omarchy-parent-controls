@@ -2,7 +2,7 @@
 
 The current deployment target is **Render Free**, which supplies a permanent `onrender.com` address and managed TLS. No domain, VPS, VPN, inbound laptop port, or per-laptop tunnel is needed. Both endpoints make outbound WebSocket connections. A single small Node service holds only disposable connection state, and devices reconnect after service restarts. No database or persistent disk is required.
 
-**Live deployment:** `https://parent-pocket-relay.onrender.com`, verified on 2026-10-02. `../remote-service.json` now records this origin for source installs and the next laptop release. Public TLS acceptance passed for parent commands, disconnect/reconnect, revocation, and the voice/Laya client exchange. The published laptop installer remains alpha.6 until the alpha.7 release is prepared.
+**Live deployment:** `https://parent-pocket-relay.onrender.com`, verified on 2026-10-02. `../remote-service.json` now records this origin for source installs and the next laptop release. Public TLS acceptance passed for parent commands, disconnect/reconnect, revocation, and the voice/Laya client exchange. The alpha.7 laptop installer includes this connection and temporary pairing codes.
 
 ## One-time Render setup
 

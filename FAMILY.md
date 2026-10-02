@@ -1,6 +1,6 @@
 # Parent Controls, now with voice and Little Screen
 
-This is the **0.5.0-alpha.4 source preview**. It extends the existing Omarchy Parent Controls project with URL-first approvals and a managed Hermes coding sandbox. No school computers were changed, and no release was published to GitHub.
+This is the **0.5.0-alpha.7 preview release**. It includes URL-first approvals, a managed Hermes coding sandbox, encrypted remote parent controls, and temporary pairing codes. Physical school-machine and iPhone acceptance remains pending.
 
 ## What belongs where
 
@@ -64,7 +64,7 @@ On a supervised Omarchy test installation, run `python3 tests/integration_hermes
 
 ## Connect the parent iPhone
 
-The new managed connection requires the protocol-v2 Parent Pocket build and an activated relay deployment. See [deployment status](docs/REMOTE-ACCESS.md); it is not yet enabled in the published alpha.6 release.
+The new managed connection requires the protocol-v2 Parent Pocket build and an activated relay deployment. See [deployment status](docs/REMOTE-ACCESS.md); it is included in alpha.7.
 
 1. On the laptop, open the lock icon and choose **Pair parent phone**.
 2. Enter the parent PIN. Type the displayed code into Parent Pocket on your iPhone or iPhone Simulator. Scanning its QR is optional.
@@ -82,11 +82,11 @@ Revoke all phones with `omarchy-parent-controls unpair`, then pair again. The re
 
 The model is an interpreter, not a security boundary. Local checks reject disallowed commands, re-read approvals before desktop execution, and keep privileged parent operations out of the voice vocabulary. Initial live Laya probes showed that labels need task descriptions and that raw model predictions can be wrong; the final bounded pipeline passed the included five text cases. That is a small regression check, not a child-speech accuracy benchmark.
 
-This release does **not** add a general screenshot-driven browser/computer agent or custom model training. Those need separate task-specific evaluation. The new managed Hermes sandbox is implemented but still needs Linux target validation. Little Screen is a restricted app, not a machine-wide guarantee against arbitrary code or every alternate video client.
+This release does **not** add a general screenshot-driven browser/computer agent or custom model training. Those need separate task-specific evaluation. The managed Hermes sandbox has passed isolated ARM Omarchy VM checks; physical hardware acceptance remains pending. Little Screen is a restricted app, not a machine-wide guarantee against arbitrary code or every alternate video client.
 
 ## Validation
 
-See [managed relay validation](docs/validation/managed-relay.md) for the current unreleased work and `FAMILY-VALIDATION.md` for the earlier implementation. The screenshots are real renders of the SwiftUI and Qt source with explicitly labeled sample data, not screenshots from a deployed school computer or physical iPhone.
+See [managed relay validation](docs/validation/managed-relay.md) for alpha.7 and `FAMILY-VALIDATION.md` for the earlier implementation. The screenshots are real renders of the SwiftUI and Qt source with explicitly labeled sample data, not screenshots from a deployed school computer or physical iPhone.
 
 ## Sound and microphones in web apps
 

@@ -2,7 +2,7 @@
 
 The new default is the managed encrypted relay in [`relay/`](../relay/README.md). The selected interim provider is Render Free, with an included `onrender.com` address and managed HTTPS. The optional Cloudflare adapter remains available. No VPN, custom domain, router forwarding, or server administration is required. A maintainer deploys it once; each laptop connects outward automatically after pairing. The parent app needs the corresponding protocol-v2 build.
 
-**Relay deployed and verified on 2026-10-02:** `https://parent-pocket-relay.onrender.com`. The source pairing configuration now includes this verified origin. The published alpha.6 installer still uses the older direct HTTPS setup; the new connection remains part of the unreleased alpha.7 source and protocol-v2 Parent Pocket build.
+**Relay deployed and verified on 2026-10-02:** `https://parent-pocket-relay.onrender.com`. The alpha.7 installer includes this verified origin and temporary pairing codes. Use Parent Pocket 0.2.1 or later on the iPhone or Simulator. Older alpha.6 installations need `omarchy-parent-controls update` first.
 
 After activation: open the laptop lock icon → **Pair parent phone** → enter the parent PIN → enter the displayed code in Parent Pocket. The iPhone Simulator uses the same code field; no camera, JSON, or URL is required. Codes expire after five minutes and are single-use. A new code invalidates older unused codes on that laptop. `omarchy-parent-controls pair` does the same from a terminal. `omarchy-parent-controls unpair` revokes all phones; `omarchy-parent-controls resume` provides a PIN-authorized local recovery command.
 

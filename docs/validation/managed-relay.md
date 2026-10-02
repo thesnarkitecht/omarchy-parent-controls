@@ -1,6 +1,6 @@
 # Managed relay and parent access validation
 
-Validated on 2026-10-02. Source targets the **unreleased** `0.5.0-alpha.7`; the public installer remains alpha.6. The Render Free relay is deployed at `https://parent-pocket-relay.onrender.com`, and `remote-service.json` records its verified HTTPS origin. Physical iPhone acceptance has not occurred.
+Validated on 2026-10-02. This validation covers the `0.5.0-alpha.7` preview release. The Render Free relay is deployed at `https://parent-pocket-relay.onrender.com`, and `remote-service.json` records its verified HTTPS origin. Physical iPhone acceptance has not occurred.
 
 ## Passed
 
@@ -25,10 +25,10 @@ Run `python -m unittest discover -s tests -v` in the parent repo and its `voice/
 
 ## Remaining acceptance
 
-Prepare and validate the alpha.7 release bundle before publishing the new installer. Check physical-laptop wake/microphone behavior, real-network sleep/resume and Wi-Fi changes, real iPhone signing/QR/Face ID/Keychain, and the actual Laya host's model/service setup. Managed hosting removes server/certificate administration but still depends on network availability, provider quotas and ordinary software updates. Background push and direct Bluetooth/LAN discovery are not included.
+Check physical-laptop wake/microphone behavior, real-network sleep/resume and Wi-Fi changes, real iPhone signing/QR/Face ID/Keychain, and the actual Laya host's model/service setup. Managed hosting removes server/certificate administration but still depends on network availability, provider quotas and ordinary software updates. Background push and direct Bluetooth/LAN discovery are not included.
 
 The same encrypted Python broker acceptance script also passed against the Render Node runtime: authentication, encrypted approval, disconnect recovery, offline rejection and revocation. Hosted acceptance now also passed on Render deployment `dep-db015ortqb8s73e4kng0` from commit `f143135c8e6db7b27b01beb7c3fa347cf22a0cc8`. Render built with Node 22.23.3 and pnpm 11.25.0 on the Free plan. The local test's initial five-second disconnect deadline failed through the hosted proxy; the hosted test now allows the relay's two 30-second heartbeat intervals plus a small margin. Observed disconnect detection was 10.2 seconds. Command deadlines and authentication checks were not relaxed.
 
 Reproduce hosted parent acceptance with `RELAY_TEST_URL=wss://parent-pocket-relay.onrender.com python relay/test/integration.py` from the repository root. All enrollments are disposable and kept in a temporary directory.
 
-After activation, all six sealed-remote/pairing tests passed again. The alpha.7 release archive was rebuilt and checked to contain the verified HTTPS origin. It has not been published.
+After activation, all six sealed-remote/pairing tests passed again. The alpha.7 release archive was rebuilt and checked to contain the verified HTTPS origin. Release publication and download verification are recorded separately in the alpha.7 release notes.
