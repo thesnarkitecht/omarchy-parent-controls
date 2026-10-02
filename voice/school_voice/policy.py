@@ -43,6 +43,14 @@ def validate(data: dict) -> dict:
     url = urlsplit(server.get("url", ""))
     if url.scheme != "https" or not url.hostname or url.username or url.password or url.query or url.fragment or url.path not in ("", "/"):
         raise ValueError("Laya needs an HTTPS origin, without credentials, path or query")
+    if server.get('transport', 'https') not in ('https', 'relay'):
+        raise ValueError('Unknown Laya connection type')
+    if server.get('transport') == 'relay':
+        if url.port not in (None, 443):
+            raise ValueError('Managed connections use HTTPS port 443')
+        for key, pattern in [('channel', r'[0-9a-f]{64}'), ('device_id', r'[0-9a-f]{32}'), ('relay_token', r'[A-Za-z0-9_-]{43}')]:
+            if not isinstance(server.get(key), str) or not re.fullmatch(pattern, server[key]):
+                raise ValueError('Pair this voice device again')
     for key in ("ca_file", "token_file"):
         if not isinstance(server.get(key), str) or not server[key].startswith("/etc/school-voice/"):
             raise ValueError(f"{key} must be in /etc/school-voice")

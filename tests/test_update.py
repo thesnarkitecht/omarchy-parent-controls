@@ -158,7 +158,7 @@ class UpdateTests(unittest.TestCase):
                     update.upgrade()
 
     def test_child_update_and_restart_reenter_only_fixed_root_command(self):
-        for action in ('update', 'restart'):
+        for action in ('update', 'restart', 'pair', 'unpair', 'resume'):
             with self.subTest(action=action), patch.object(sys, 'argv', ['cli', action]), \
                     patch.object(update.os, 'geteuid', return_value=1000), \
                     patch.object(update.os, 'execv', side_effect=SystemExit) as execute:

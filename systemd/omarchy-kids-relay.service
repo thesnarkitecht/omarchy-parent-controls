@@ -1,0 +1,29 @@
+[Unit]
+Description=Automatic encrypted parent connection
+After=network-online.target omarchy-kids-control.service
+Wants=network-online.target
+Requires=omarchy-kids-control.service
+ConditionPathExists=/etc/omarchy-kids/relay.json
+
+[Service]
+ExecStart=/usr/local/lib/omarchy-kids/run relay_client
+LoadCredential=relay.json:/etc/omarchy-kids/relay.json
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+LockPersonality=yes
+MemoryMax=128M
+TasksMax=16
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -75,6 +75,9 @@ class Store:
         if action == 'remote-parent':
             from family import remote
             return remote(self, req.get('envelope'))
+        if action == 'remote-sealed':
+            from sealed_remote import dispatch
+            return dispatch(self, req.get('packet'))
         if action == 'family-change':
             from family import read, apply, public
             self.authenticate(req.get('pin'))
@@ -132,7 +135,7 @@ class Handler(socketserver.StreamRequestHandler):
             if len(raw) > LIMIT or not raw.endswith(b"\n"):
                 raise ValueError("Invalid request size.")
             req = json.loads(raw)
-            if isinstance(req, dict) and req.get('action') in ('ask-parent', 'remote-enroll', 'remote-revoke'):
+            if isinstance(req, dict) and req.get('action') in ('ask-parent', 'remote-enroll', 'remote-revoke', 'access-admin'):
                 _, uid, _ = struct.unpack('3i', self.connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
                 response = peer_action(self.server.store, req, uid)
             elif isinstance(req, dict) and req.get("action") == "launch-hermes":
@@ -168,8 +171,12 @@ def peer_action(store, req, uid):
         return submit(store, req.get('request'))
     if uid != 0:
         raise ValueError('Pairing and revocation require parent administrator access.')
+    if req['action'] == 'access-admin':
+        from access_control import change, status
+        change(req.get('paused'))
+        return status()
     if req['action'] == 'remote-enroll':
-        return {'pairing': enroll(store, req.get('endpoint'), req.get('name'))}
+        return {'pairing': enroll(store, req.get('endpoint'), req.get('name'), req.get('relay'))}
     if req['action'] == 'remote-revoke':
         return revoke(store)
     raise ValueError('Unknown peer action.')

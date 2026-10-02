@@ -178,14 +178,18 @@ def main():
     sub = parser.add_subparsers(dest='action', required=True)
     sub.add_parser('version', help='Show the installed version')
     sub.add_parser('status', help='Show control and service status')
+    pair = sub.add_parser('pair', help='Show a pairing QR for the parent phone (parent PIN required)')
+    pair.add_argument('--wait', action='store_true', help='Keep the pairing screen open')
+    sub.add_parser('resume', help='Resume a paused laptop using the parent PIN')
+    sub.add_parser('unpair', help='Disconnect all parent phones (parent PIN required)')
     sub.add_parser('restart', help='Restart services (parent PIN required)')
     update = sub.add_parser('update', help='Install the newest published release (parent PIN required)')
     update.add_argument('--check', action='store_true', help='Check for updates without making changes')
     args = parser.parse_args()
-    privileged = args.action == 'restart' or (args.action == 'update' and not args.check)
+    privileged = args.action in ('restart', 'pair', 'unpair', 'resume') or (args.action == 'update' and not args.check)
     if privileged and os.geteuid() != 0:
         # Re-enter only the installed, root-owned command, with fixed arguments.
-        os.execv('/usr/bin/sudo', ['sudo', '--', '/usr/local/bin/omarchy-parent-controls', args.action])
+        os.execv('/usr/bin/sudo', ['sudo', '--', '/usr/local/bin/omarchy-parent-controls', args.action] + (['--wait'] if getattr(args, 'wait', False) else []))
     try:
         if args.action == 'version':
             print('Parent Controls ' + installed())
@@ -194,12 +198,21 @@ def main():
             print('Controlled mode: ' + ('on' if (ETC / 'controlled-on').exists() else 'off'), flush=True)
             return subprocess.run(['/usr/bin/systemctl', '--no-pager', 'status',
                                    'omarchy-kids-control.service', 'omarchy-kids-policy.service',
-                                   'omarchy-kids-audio.socket', 'omarchy-kids-remote.service']).returncode
+                                   'omarchy-kids-audio.socket', 'omarchy-kids-relay.service',
+                                   'omarchy-kids-access.timer', 'omarchy-kids-activity.service']).returncode
+        elif args.action == 'resume':
+            from client import request
+            request('access-admin', paused=False)
+            print('Computer access resumed.')
+        elif args.action in ('pair', 'unpair'):
+            from pair_parent import main as pair
+            return pair(['--revoke-all'] if args.action == 'unpair' else (['--qr', '--wait'] if args.wait else ['--qr']))
         elif args.action == 'restart':
             with update_lock():
                 subprocess.run(['/usr/bin/systemctl', 'restart', 'omarchy-kids-control.service'], check=True)
                 subprocess.run(['/usr/bin/systemctl', 'try-restart', 'omarchy-kids-policy.service',
-                                'omarchy-kids-audio.service', 'omarchy-kids-remote.service'], check=True)
+                                'omarchy-kids-audio.service', 'omarchy-kids-remote.service',
+                                'omarchy-kids-relay.service', 'omarchy-kids-activity.service'], check=True)
             print('Parent Controls services restarted.')
         elif args.check:
             upgrade(check=True)

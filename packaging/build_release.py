@@ -10,11 +10,12 @@ import tarfile
 
 ROOT=Path(__file__).resolve().parents[1]
 FOLDERS={'bin','kids','native','integration','systemd','tests','packaging','.github','voice','docs'}
-FILES={'manifest.json','Controls.qml','BarWidget.qml','install.sh','README.md','SECURITY.md','VALIDATION.md','FAMILY.md','FAMILY-VALIDATION.md','LICENSE'}
+FILES={'remote-service.json','manifest.json','Controls.qml','BarWidget.qml','install.sh','README.md','SECURITY.md','VALIDATION.md','FAMILY.md','FAMILY-VALIDATION.md','LICENSE'}
 
 def source_files(root):
     for path in sorted(root.rglob('*')):
         relative=path.relative_to(root)
+        if relative.parts[0] in ('relay', '.git'): continue
         if path.is_symlink(): raise ValueError('Release sources must not contain symlinks: '+str(relative))
         if not path.is_file() or '__pycache__' in relative.parts or path.suffix=='.pyc': continue
         if (len(relative.parts)==1 and relative.name in FILES) or (relative.parts[0] in FOLDERS):

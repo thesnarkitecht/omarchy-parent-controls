@@ -21,7 +21,7 @@ The standard Hermes Desktop runs as another locked service account. Its unit has
 - The model server is trusted. A local proxy or a model service that executes tools remotely can weaken the intended isolation. The plugin does not control remote machines.
 - The parent panel runs in the child's desktop session. It is not a trusted secure-attention screen and cannot protect a PIN from malicious session-level software. Use it for practical family controls, not hostile multi-user administration.
 - Parents can disable the mode with their PIN. Root, trusted recovery media, another privileged account, or physical boot access can change the policy.
-- This is not a content filter, screen-time manager, child-monitoring service, or guarantee about approved websites. No browsing activity is sent to the plugin author.
+- This is not a comprehensive content filter or guarantee about approved websites. The unreleased screen-time feature reports approximate unlocked desktop totals, not tamperproof per-app accounting. No browsing activity is sent to the plugin author.
 
 Report suspected bypasses privately to the repository owner. Do not include a parent PIN, credentials, personal files or browser profiles in reports.
 
@@ -42,3 +42,7 @@ Bubblewrap's own [security guidance](https://github.com/containers/bubblewrap#se
 ## Web-app audio
 
 Managed web apps receive a single root-located audio endpoint through their mount namespace. A socket-activated transport runs as the configured desktop user, checks the connecting browser worker UID with Linux peer credentials and forwards bytes only to that user's Pulse-compatible audio socket. Playback and microphone capture are allowed by this endpoint; Chromium retains its site permission checks. This grants the worker normal Pulse audio-service access, not merely playback. It does not expose the session bus, native PipeWire graph socket, parent authentication files or a network audio listener. No endpoint is added to Hermes CLI. Read-only client configuration disables shared-memory transport; buffers and concurrent connections are bounded, and no audio samples are saved or logged. Dictation continues to use the normal child audio session. See [the audio design and validation limits](docs/WEBAPP-AUDIO.md).
+
+## Managed remote connection (unreleased alpha.7)
+
+The unprivileged outbound connector carries encrypted parent commands to the existing root broker. The provider cannot read command bodies or forge authenticated replies; it still sees connection metadata and controls availability. QR pairing secrets remain parent credentials. Root-only enrollment and immediate revocation remain required. See [the protocol and hosting limits](relay/README.md) and [acceptance results](docs/validation/managed-relay.md). A production endpoint is deliberately absent until deployment is verified.

@@ -1,0 +1,9 @@
+[Unit]
+Description=Apply the parent's pause or resume choice
+After=local-fs.target
+ConditionPathExists=/etc/omarchy-kids/account.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/omarchy-kids/run access_control
+TimeoutStartSec=40

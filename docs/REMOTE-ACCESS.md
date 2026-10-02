@@ -1,17 +1,15 @@
-# Free remote parent access
+# Automatic remote parent access
 
-Checked against the providers' published plans on 2026-10-02. No manual router port forwarding is required for these hosted mesh-network options. Both devices need outbound connectivity; restrictive networks may use a relay and still must permit that traffic.
+The new default is the managed encrypted relay in [`relay/`](../relay/README.md). The selected interim provider is Render Free, with an included `onrender.com` address and managed HTTPS. The optional Cloudflare adapter remains available. No VPN, custom domain, router forwarding, or server administration is required. A maintainer deploys it once; each laptop connects outward automatically after pairing. The parent app needs the corresponding protocol-v2 build.
 
-| Option | Published free allowance | Fit for Parent Controls |
-| --- | --- | --- |
-| [Tailscale Personal](https://tailscale.com/pricing) | $0, up to 6 users, unlimited user devices; personal, non-commercial use | Works with the current pairing and private HTTPS Serve design. Best fit for a family's computers. |
-| [NetBird Free](https://netbird.io/pricing) | €0, up to 5 users and 100 machines | A viable alternative, but requires changes to endpoint pairing and private HTTPS exposure. It is not currently integrated. |
-| [ZeroTier Personal](https://www.zerotier.com/pricing/) | $0, 10 devices, one network, one administrator; personal, non-commercial use | Enough for a small family network, but also needs different endpoint pairing and HTTPS setup. It is not currently integrated. |
+**Relay deployed and verified on 2026-10-02:** `https://parent-pocket-relay.onrender.com`. The source pairing configuration now includes this verified origin. The published alpha.6 installer still uses the older direct HTTPS setup; the new connection remains part of the unreleased alpha.7 source and protocol-v2 Parent Pocket build.
 
-Tailscale's paid plans are not required just to reach the girls' personal schoolwork machines. Use the Personal plan for eligible family use. A custom-domain login may initially enter a business trial; [Tailscale documents how personal users can opt out](https://tailscale.com/pricing). An organization-managed school deployment should check its own plan eligibility.
+After activation: open the laptop lock icon → **Pair parent phone** → enter the parent PIN → scan with Parent Pocket. There is no URL to paste in normal pairing. `omarchy-parent-controls pair` does the same from a terminal. `omarchy-parent-controls unpair` revokes all phones; `omarchy-parent-controls resume` provides a PIN-authorized local recovery command.
 
-The current parent app and broker intentionally validate HTTPS `.ts.net` endpoints, and the HTTP relay listens only on localhost. Installing NetBird or ZeroTier alone therefore will not make the current app use them. Supporting either needs a reviewed HTTPS endpoint design and corresponding changes in both the iOS app and broker; do not work around this by exposing the relay publicly or disabling certificate checks.
+The encrypted relay carries only bounded parent operations and Laya suggestion requests. Laya audio capture and transcription stay on the laptop; actions are checked and executed on the laptop. Local dictation continues without the relay. The laptop and the Laya host must be awake for their respective remote functions. Offline commands are never queued for later execution.
 
-Connectivity references: [Tailscale Serve without port forwarding](https://tailscale.com/docs/use-cases/application-testing/share-local-dev-server-with-team), [NetBird outbound-only connectivity](https://docs.netbird.io/about-netbird/ports-and-firewalls), [ZeroTier router guidance](https://docs.zerotier.com/routertips/).
+Render manages the host and public certificates. Its free service may take about a minute to wake after an idle period; the devices reconnect automatically. This still needs ordinary software updates, an active account, and available free-plan quota; it is not an unlimited or guaranteed-uptime service. Nothing enables a paid plan automatically. See [Render’s free-service limits](https://render.com/docs/free).
 
-Self-hosted control servers can avoid a vendor subscription, but the server still needs hosting and reliable public reachability. Free software alone does not guarantee a zero-cost, no-port-forwarding deployment. No accounts, subscriptions, routers or existing network settings were changed by this comparison.
+Existing direct HTTPS pairing remains compatible, including private Tailscale Serve origins. That is an advanced alternative and requires its own certificate and network setup. ProtonVPN port forwarding is not used. Never disable TLS checks or expose the root broker as a general network service.
+
+See the [relay protocol and deployment guide](../relay/README.md) for credential boundaries, provider-visible metadata, tests, and activation.

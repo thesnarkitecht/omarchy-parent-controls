@@ -19,7 +19,7 @@ This is a set of practical guardrails for young children who know their login pa
 
 Web-app speaker and microphone access use a dedicated local audio connection while School Voice dictation stays on the normal desktop audio service. See [audio setup and diagnostics](docs/WEBAPP-AUDIO.md).
 
-Remote parent access can use the free Tailscale Personal plan for eligible family use. [Compare free options](docs/REMOTE-ACCESS.md), including NetBird and ZeroTier.
+The encrypted managed relay is deployed and verified, with no VPN or router setup. [Deployment status and pairing](docs/REMOTE-ACCESS.md). The published alpha.6 installer does not yet include this unreleased connection.
 
 ## Requirements
 

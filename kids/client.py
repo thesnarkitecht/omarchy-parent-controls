@@ -3,7 +3,9 @@ import socket
 
 SOCKET = "/run/omarchy-kids-control/control.sock"
 LIMIT = 65536
-RESPONSE_LIMIT = 1024 * 1024
+# Allows the existing bounded snapshot plus authenticated-encryption/base64
+# overhead; request size remains 64 KiB.
+RESPONSE_LIMIT = 1_400_000
 
 def request(action, timeout=110, **fields):
     payload = json.dumps({"action": action, **fields}).encode() + b"\n"
