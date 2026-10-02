@@ -2,6 +2,6 @@
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 if [[ $EUID != 0 ]]; then
-  exec sudo /usr/bin/python3 -I "$root/packaging/setup.py" --user "$(id -un)" "$@"
+  exec sudo /usr/bin/python3 -I -B "$root/packaging/setup.py" --user "$(id -un)" "$@"
 fi
-exec /usr/bin/python3 -I "$root/packaging/setup.py" "$@"
+exec /usr/bin/python3 -I -B "$root/packaging/setup.py" "$@"

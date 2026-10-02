@@ -164,7 +164,7 @@ def upgrade(check=False):
         backup = backup_settings()
         print('Settings backup: ' + backup, flush=True)
         try:
-            subprocess.run(['/usr/bin/python3', '-I', str(source / 'packaging/setup.py'),
+            subprocess.run(['/usr/bin/python3', '-I', '-B', str(source / 'packaging/setup.py'),
                             '--user', account['user'], '--skip-apps'], check=True,
                            env={'PATH': '/usr/local/bin:/usr/bin', 'HOME': '/root', 'LANG': 'C.UTF-8'})
         except subprocess.CalledProcessError:

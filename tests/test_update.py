@@ -142,7 +142,7 @@ class UpdateTests(unittest.TestCase):
                     patch.object(update.subprocess, 'run') as run:
                 update.upgrade()
                 backup.assert_called_once()
-                self.assertEqual(run.call_args.args[0], ['/usr/bin/python3', '-I',
+                self.assertEqual(run.call_args.args[0], ['/usr/bin/python3', '-I', '-B',
                     str(root/'source/packaging/setup.py'), '--user', 'student', '--skip-apps'])
 
     def test_failed_install_reports_backup_and_does_not_claim_success(self):

@@ -10,3 +10,7 @@ Validated October 2, 2026 in the isolated Omarchy ARM VM used for alpha.4.
 - Unit tests cover numeric prerelease selection, stable-channel behavior, draft rejection, no downgrades, read-only checks, checksum failure, repository mismatch, archive traversal/symlink/hardlink/device rejection, fixed privilege elevation, saved account selection and installation error reporting.
 
 The release checksum is delivered by the same GitHub repository as the archive, not an independent signing authority. CLI updates take a private settings backup before executing the installer. Installation is not transactional; a failure can require rerunning the update after resolving the reported error. Voice session restarts require logout/login. No physical school computer was modified.
+
+## Interactive public-download check
+
+The alpha.5 public installer authenticated successfully through the child's terminal and installed the controls, but cleanup then failed on root-owned `__pycache__` files in its temporary source tree. Alpha.6 disables bytecode writes during privileged installation (`python3 -I -B`) to avoid leaving those files behind.
