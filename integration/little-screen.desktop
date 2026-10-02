@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Little Screen
+Comment=Only the videos your parent picked
+Exec=/usr/local/bin/omarchy-kids-videos
+Icon=video-display
+Terminal=false
+Categories=Education;Video;
+StartupWMClass=little-screen

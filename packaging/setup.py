@@ -85,10 +85,12 @@ def main():
     parser=argparse.ArgumentParser(description='Set up native Omarchy parent controls')
     parser.add_argument('--user',default=os.environ.get('SUDO_USER'))
     parser.add_argument('--hermes-binary')
+    parser.add_argument('--with-hermes', action='store_true', help='Install and approve the sandboxed terminal Hermes agent')
     parser.add_argument('--model-host',help='IP address of the existing local model server')
     parser.add_argument('--model-port',type=int,default=11434)
     parser.add_argument('--check',action='store_true',help='Read-only preflight')
     parser.add_argument('--skip-apps',action='store_true',help='Keep the current app set')
+    parser.add_argument('--voice-pairing',help='Install integrated voice using this Laya device pairing directory')
     args=parser.parse_args()
     user=target_user(args.user)
     if not Path('/etc/arch-release').exists() or not Path('/usr/share/omarchy').is_dir():
@@ -114,7 +116,7 @@ def main():
             try: pwd.getpwnam(name)
             except KeyError: pass
             else: raise ValueError('Refusing to reuse an unrelated service account: '+name)
-    packages=['python','pyside6','acl','nftables','chromium']
+    packages=['python','pyside6','acl','nftables','chromium','mpv','yt-dlp','qrencode','bubblewrap']
     if not args.skip_apps and not previous:
         packages += ['gnome-calculator','papers','file-roller','gnome-text-editor']
     run('/usr/bin/pacman','-S','--needed','--noconfirm',*packages)
@@ -138,7 +140,7 @@ def main():
         path.mkdir(parents=True,exist_ok=True)
     for item in (SOURCE/'kids').glob('*.py'): copy(item,LIB/item.name)
     copy(SOURCE/'native/native-ui.py',LIB/'native-ui.py')
-    for name in ('run','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url'):
+    for name in ('run','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
         copy(SOURCE/'bin'/name,LIB/'run' if name=='run' else Path('/usr/local/bin')/name,0o755)
     copy(SOURCE/'native/pam-pin',LIB/'pam-pin',0o755)
     copy(SOURCE/'native/windows-pkexec',LIB/'windows-tools/pkexec',0o755)
@@ -146,6 +148,9 @@ def main():
     copy(SOURCE/'packaging/remove.py',LIB/'remove.py')
     copy(SOURCE/'integration/omarchy-kids.desktop',BUNDLE/'integration/omarchy-kids.desktop')
     copy(SOURCE/'integration/omarchy-kids.desktop','/usr/local/share/applications/omarchy-kids.desktop')
+    copy(SOURCE/'integration/little-screen.desktop','/usr/local/share/applications/little-screen.desktop')
+    copy(SOURCE/'native/video-input.conf',LIB/'video-input.conf')
+    copy(SOURCE/'systemd/omarchy-kids-remote.service','/etc/systemd/system/omarchy-kids-remote.service')
     copy(SOURCE/'native/approved-browser.desktop','/usr/local/share/applications/omarchy-kids-approved-browser.desktop')
     if config.get('hermes_binary'):
         launcher=Path('/usr/local/bin/hermes-desktop')
@@ -154,6 +159,18 @@ def main():
             copy(launcher,saved,0o700)
         copy(SOURCE/'native/hermes-desktop','/usr/local/bin/hermes-desktop',0o755)
         write('/usr/local/share/applications/omarchy-kids-hermes.desktop','[Desktop Entry]\nType=Application\nName=Hermes\nExec=/usr/local/bin/hermes-desktop\nIcon=hermes\nTerminal=false\nCategories=Utility;\n')
+    from coding import prepare
+    prepare(user)
+    from hermes_install import selected, ensure
+    if args.with_hermes or selected(user):
+        if args.with_hermes:
+            write(STATE/'approved-agent', 'hermes\n', 0o600)
+            if (ETC/'controlled-on').exists():
+                # Remove any old deny ACL on a previously unselected Hermes
+                # runtime before checking the newly approved CLI as the child.
+                from native_policy import apply
+                apply()
+        ensure(user)
     for name in ('omarchy-kids','omarchy-kids-hermes'):
         owner=pwd.getpwnam(name)
         destinations=['/var/lib/omarchy-kids/data','/var/lib/omarchy-kids/icons'] if name=='omarchy-kids' else ['/var/lib/omarchy-kids/hermes-home']
@@ -180,7 +197,7 @@ def main():
     write('/etc/systemd/system/omarchy-kids-rollback.service','[Unit]\nDescription=Recover unconfirmed parent-controls setup\nConditionPathExists=!/etc/omarchy-kids/native-confirmed\n[Service]\nType=oneshot\nExecStart=/usr/bin/python3 -I /usr/local/lib/omarchy-kids/remove.py --recovery\n')
     write('/etc/systemd/system/omarchy-kids-rollback.timer','[Unit]\nDescription=Recover unconfirmed parent-controls setup\n[Timer]\nOnActiveSec=15min\n[Install]\nWantedBy=timers.target\n')
     from control import Store
-    from native_policy import BANNED
+    from native_policy import BANNED, RUNTIME_COMMANDS
     fresh=not (STATE/'pin.json').exists()
     new_pin=None
     if fresh:
@@ -188,7 +205,7 @@ def main():
         if new_pin != getpass.getpass('Repeat parent PIN: '): raise ValueError('PINs did not match.')
         Store().initialize(new_pin)
     denied=json.loads((ETC/'denied-commands.json').read_text()) if (ETC/'denied-commands.json').exists() else []
-    write(ETC/'denied-commands.json',json.dumps(sorted(set(BANNED)|set(denied)),indent=2)+'\n')
+    write(ETC/'denied-commands.json',json.dumps(sorted((set(BANNED)|set(denied))-RUNTIME_COMMANDS),indent=2)+'\n')
     run('/usr/bin/systemctl','daemon-reload')
     run('/usr/bin/systemctl','enable','--now','omarchy-kids-control.service')
     run('/usr/bin/systemctl','restart','omarchy-kids-control.service')
@@ -204,6 +221,10 @@ def main():
     run('/usr/bin/systemctl','start','omarchy-kids-enable.service')
     write(ETC/'native-confirmed','PIN authentication configured\n')
     run('/usr/bin/systemctl','disable','--now','omarchy-kids-rollback.timer')
+    if args.voice_pairing:
+        sys.path.insert(0, str(SOURCE/'packaging'))
+        from install_voice import install
+        install(SOURCE, args.voice_pairing, user)
     as_user(user,'/usr/bin/xdg-mime','default','omarchy-kids-approved-browser.desktop','x-scheme-handler/http','x-scheme-handler/https')
     environment={**os.environ,'OMARCHY_PATH':'/usr/share/omarchy','XDG_RUNTIME_DIR':'/run/user/'+str(user.pw_uid)}
     as_user(user,'/usr/bin/omarchy','bar','put','thesnarkitecht.kids-lockdown','--after','omarchy.clock',env=environment)

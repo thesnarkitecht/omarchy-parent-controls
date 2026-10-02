@@ -69,6 +69,11 @@ def main():
                        'OMARCHY_PATH=/usr/share/omarchy','XDG_RUNTIME_DIR='+runtime,
                        'DBUS_SESSION_BUS_ADDRESS=unix:path='+runtime+'/bus',
                        'HYPRLAND_INSTANCE_SIGNATURE='+instances[0].parent.name]
+        voice_setup = Path('/usr/local/share/omarchy-kids/voice/scripts/setup-desktop.py')
+        if voice_setup.is_file() and Path('/etc/school-voice/policy.json').is_file():
+            # Restoring the parent's old bindings must not drop the voice shortcuts.
+            # The helper backs up, checks conflicts and validates/reverts Hyprland.
+            run(*environment, '/usr/bin/python3', str(voice_setup))
         if subprocess.run(environment + ['/usr/bin/omarchy','shell','shell','ping'],
                           capture_output=True, timeout=5).returncode == 0:
             run(*environment, '/usr/bin/omarchy','restart','shell')

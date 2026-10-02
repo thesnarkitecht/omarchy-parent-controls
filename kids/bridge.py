@@ -11,6 +11,7 @@ from core import origin, validate_policy
 
 def status():
     value = request("status")
+    value['family'] = request('family-status')
     from native_runtime import configured
     value["native"] = configured()
     value["active"] = configured() and Path('/etc/omarchy-kids/controlled-on').exists()
@@ -27,6 +28,11 @@ def dispatch(value):
     action = value.get("action")
     if action == "status":
         return status()
+    if action == 'ask-parent':
+        return {**request('ask-parent', request=value.get('request')), 'message': 'Sent to your parent. You can check back here.'}
+    if action == 'family-change':
+        result = request('family-change', pin=value.get('pin'), operation=value.get('operation'), fields=value.get('fields'))
+        return {**status(), 'message': 'Saved.', 'family': result}
     if action in ('enable-controls', 'disable-controls'):
         request(action, pin=value.get('pin'))
         return {**status(), 'message': 'Controlled mode is ' + ('on.' if action == 'enable-controls' else 'off.')}
@@ -36,9 +42,14 @@ def dispatch(value):
         launch(value.get('tool'))
         return {'ok':True, 'message':'Opened Omarchy’s parent tool.'}
     if action in ("add-webapp", "edit-webapp"):
+        from family import website
+        if action == 'add-webapp' and not value.get('origins', '').strip():
+            result = request('family-change', pin=value.get('pin'), operation='add-webapp',
+                             fields={'name': value.get('name', ''), 'url': value.get('url', '')})
+            return {'ok': True, 'message': 'Website approved.', 'policy': result['policy']}
         import re
         state = request("status")["policy"]
-        name, url = value.get("name", "").strip(), value.get("url", "").strip()
+        name, url, site = website(value.get('url', ''), value.get('name', ''))
         key = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:32]
         if not key or not key[0].isalpha():
             key = "app-" + key

@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 # Optional educational applications; everyday native apps are selected separately.
 CATALOG = {
+    "math": {"name": "Math Match", "binary": "/usr/local/bin/sparkle-math", "package": None},
     "tuxpaint": {"name": "Tux Paint", "binary": "/usr/bin/tuxpaint", "package": "tuxpaint"},
     "gcompris": {"name": "GCompris", "binary": "/usr/bin/gcompris-qt", "package": "gcompris-qt"},
     "supertux": {"name": "SuperTux", "binary": "/usr/bin/supertux2", "package": "supertux"},

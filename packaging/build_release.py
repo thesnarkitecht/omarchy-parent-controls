@@ -9,8 +9,8 @@ import re
 import tarfile
 
 ROOT=Path(__file__).resolve().parents[1]
-FOLDERS={'bin','kids','native','integration','systemd','tests','packaging','.github'}
-FILES={'manifest.json','Controls.qml','BarWidget.qml','install.sh','README.md','SECURITY.md','VALIDATION.md','LICENSE'}
+FOLDERS={'bin','kids','native','integration','systemd','tests','packaging','.github','voice','docs'}
+FILES={'manifest.json','Controls.qml','BarWidget.qml','install.sh','README.md','SECURITY.md','VALIDATION.md','FAMILY.md','FAMILY-VALIDATION.md','LICENSE'}
 
 def source_files(root):
     for path in sorted(root.rglob('*')):

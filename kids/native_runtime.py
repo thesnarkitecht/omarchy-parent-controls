@@ -88,6 +88,13 @@ def desktop_entries(policy):
     APPS.mkdir(parents=True, exist_ok=True)
     LAUNCHERS.mkdir(parents=True, exist_ok=True)
     LAUNCHERS.chmod(0o755)
+    from core import CATALOG
+    for key, app in CATALOG.items():
+        target = APPS / ('omarchy-kids-native-' + key + '.desktop')
+        if key in policy.get('native', []) and Path(app['binary']).is_file():
+            publish_entry(target, '[Desktop Entry]\nType=Application\nName=' + app['name'] + '\nExec=' + app['binary'] + '\nTerminal=false\nCategories=Education;\n')
+        else:
+            target.unlink(missing_ok=True)
     approved = {app['id'] for app in policy['webapps']}
     for folder, prefix in ((APPS, 'omarchy-kids-webapp-'), (LAUNCHERS, 'webapp-')):
         for path in folder.glob(prefix + '*.desktop'):

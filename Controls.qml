@@ -14,7 +14,7 @@ Item {
   property string page: "home"
   property string message: ""
   property bool failed: false
-  property var state: ({policy: {native: [], webapps: []}, ready: false, active: false, hermes: false})
+  property var state: ({policy: {native: [], webapps: []}, family: {voice: {enabled:false,wake_enabled:true,phrase:"Hey Laya"}, videos:[], requests:[], voice_installed:false}, ready: false, active: false, hermes: false})
   property var pending: ({})
   property string requestJson: ""
   property string currentAction: ""
@@ -144,6 +144,8 @@ Item {
             Label { visible: root.state.active && root.state.healthy === false; width: parent.width; text: "The last change did not finish. Turn controls off with your PIN to retry restoring normal access."; color: Color.urgent }
             Label { width: parent.width; text: root.state.active ? "Only approved apps and websites. Changes need your PIN." : "All apps and browsing are available. Turn controls on when ready." }
             Action { width: parent.width; text: root.state.active ? "Turn controlled mode off" : "Turn controlled mode on"; selected: true; onClicked: root.approve({action: root.state.active ? "disable-controls" : "enable-controls"}) }
+            Action { width: parent.width; text: "Voice, videos & requests"; onClicked: { root.page = "family"; voicePhrase.text = root.state.family.voice.phrase } }
+            Action { width: parent.width; text: "Little Screen · watch or ask a parent"; onClicked: { Quickshell.execDetached(["/usr/local/bin/omarchy-kids-videos"]); root.dismiss() } }
             Row {
               width: parent.width
               Label { width: parent.width - addButton.width; text: "Approved webapps"; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
@@ -181,12 +183,55 @@ Item {
             }
           }
           Column {
+            visible: root.page === "family"
+            width: parent.width
+            spacing: Style.space(12)
+            Label { text: "Voice & Little Screen"; font.pixelSize: Style.font.subtitle; font.bold: true }
+            Label { width: parent.width; text: root.state.family.voice.enabled ? "Voice control is on. Approved commands happen without confirmation." : "Voice control is off." }
+            Label { visible: !root.state.family.voice_installed; width: parent.width; text: "Voice support needs to be installed with this computer’s Laya pairing first." }
+            TextField { id: voicePhrase; width: parent.width; placeholderText: "Hey Laya"; maximumLength: 60 }
+            Action { width: parent.width; text: root.state.family.voice.enabled ? "Turn voice control off" : "Turn voice control on"; enabled: !root.busy && root.state.family.voice_installed; onClicked: root.approve({action:"family-change",operation:"set-voice",fields:{enabled:!root.state.family.voice.enabled,wake_enabled:root.state.family.voice.wake_enabled,phrase:voicePhrase.text}}) }
+            Action { width: parent.width; text: root.state.family.voice.wake_enabled ? "Use hotkeys only" : "Listen for the wake word"; enabled: !root.busy && root.state.family.voice_installed; onClicked: root.approve({action:"family-change",operation:"set-voice",fields:{enabled:root.state.family.voice.enabled,wake_enabled:!root.state.family.voice.wake_enabled,phrase:voicePhrase.text}}) }
+            Action { width: parent.width; text: "Save wake phrase"; enabled: !root.busy && root.state.family.voice_installed; onClicked: root.approve({action:"family-change",operation:"set-voice",fields:{enabled:root.state.family.voice.enabled,wake_enabled:root.state.family.voice.wake_enabled,phrase:voicePhrase.text}}) }
+            Label { text: "Requests"; font.bold: true }
+            Repeater {
+              model: root.state.family.requests.filter(function(r) { return r.status === "pending" })
+              Column {
+                required property var modelData
+                width: content.width
+                spacing: Style.space(6)
+                Label { width: parent.width; text: modelData.name + " · " + modelData.kind; font.bold: true }
+                Label { width: parent.width; text: modelData.target + (modelData.reason ? "\n" + modelData.reason : "") }
+                Row {
+                  spacing: Style.space(12)
+                  Button { text: "Allow"; enabled: !root.busy; onClicked: root.approve({action:"family-change",operation:"review",fields:{request_id:modelData.id,allow:true}}) }
+                  Button { text: "Not now"; enabled: !root.busy; onClicked: root.approve({action:"family-change",operation:"review",fields:{request_id:modelData.id,allow:false}}) }
+                }
+              }
+            }
+            Label { text: "Only videos you pick"; font.bold: true }
+            Label { width: parent.width; text: "Approve individual videos. No channels, playlists or recommendations." }
+            TextField { id: videoUrl; width: parent.width; placeholderText: "YouTube video link"; maximumLength: 2048 }
+            TextField { id: videoName; width: parent.width; placeholderText: "Video title · optional"; maximumLength: 80 }
+            Action { width: parent.width; text: "Add to Little Screen"; onClicked: root.approve({action:"family-change",operation:"add-video",fields:{name:videoName.text,url:videoUrl.text}}) }
+            Repeater {
+              model: root.state.family.videos
+              Row {
+                required property var modelData
+                width: content.width
+                Label { width: parent.width - removeVideo.width; text: modelData.name }
+                Button { id: removeVideo; text: "Remove"; enabled: !root.busy; onClicked: root.approve({action:"family-change",operation:"remove-video",fields:{video_id:modelData.id}}) }
+              }
+            }
+            Button { text: "← Back"; onClicked: root.page = "home" }
+          }
+          Column {
             visible: root.page === "webapp"
             width: parent.width
             spacing: Style.space(12)
             Label { text: root.editingId ? "Edit webapp" : "Approve a webapp"; font.pixelSize: Style.font.subtitle; font.bold: true }
-            TextField { id: appName; width: parent.width; placeholderText: "App name"; maximumLength: 60 }
-            TextField { id: appUrl; width: parent.width; placeholderText: "https://example.org"; maximumLength: 2048 }
+            TextField { id: appUrl; width: parent.width; placeholderText: "Paste an app or website URL"; maximumLength: 2048 }
+            TextField { id: appName; width: parent.width; placeholderText: "App name · optional"; maximumLength: 60 }
             Label { width: parent.width; text: "Links can open approved websites. Add related or login sites below, separated by commas. For x.ai → Grok, include https://grok.com."; opacity: 0.65 }
             TextField { id: appOrigins; width: parent.width; placeholderText: "Related sites · https://example.org"; maximumLength: 4096 }
             Action { width: parent.width; text: "Continue with parent PIN"; onClicked: root.approve({action: root.editingId ? "edit-webapp" : "add-webapp", id: root.editingId, name: appName.text, url: appUrl.text, origins: appOrigins.text}) }
@@ -199,6 +244,7 @@ Item {
             Label { text: "Parent tools"; font.pixelSize: Style.font.subtitle; font.bold: true }
             Label { width: parent.width; text: "Turn controlled mode off first. These tools use Omarchy’s normal setup screens; nothing is installed until you choose it." }
             Action { width: parent.width; text: "Choose default agent…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "agent"}) }
+            Action { width: parent.width; text: "Install or repair Hermes…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "hermes-repair"}) }
             Action { width: parent.width; text: "Set up Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-install"}) }
             Action { width: parent.width; text: "Open Windows…"; enabled: !root.busy && !root.state.active; onClicked: root.approve({action: "parent-tool", tool: "windows-launch"}) }
             Label { width: parent.width; text: "Windows apps and browsers need their own controls inside Windows. Shut Windows down before turning Omarchy controls back on."; opacity: 0.65 }

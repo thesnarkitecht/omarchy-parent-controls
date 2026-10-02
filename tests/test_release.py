@@ -50,10 +50,17 @@ bash "$1"
                 self.assertTrue(all(n.startswith('omarchy-parent-controls/') and '..' not in Path(n).parts for n in names))
                 self.assertFalse(any('__pycache__' in n for n in names))
                 self.assertIn('omarchy-parent-controls/packaging/remove.py',names)
+                for relative in ('kids/hermes_cli.py', 'kids/coding.py', 'kids/family.py',
+                                 'systemd/omarchy-kids-remote.service', 'packaging/install_voice.py',
+                                 'voice/school_voice/parent_controls.py', 'voice/scripts/setup-desktop.py',
+                                 'FAMILY.md', 'docs/validation/url-approval-validation.json'):
+                    self.assertIn('omarchy-parent-controls/' + relative, names)
                 manifest=json.load(bundle.extractfile('omarchy-parent-controls/manifest.json'))
                 self.assertEqual(manifest['id'],'example.kids-lockdown')
                 launcher=bundle.extractfile('omarchy-parent-controls/bin/omarchy-kids').read()
                 self.assertIn(b'example.kids-lockdown',launcher)
+                setup=bundle.extractfile('omarchy-parent-controls/packaging/setup.py').read()
+                self.assertIn(b"PLUGIN_ID = 'example.kids-lockdown'",setup)
 
     def test_repository_injection_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:

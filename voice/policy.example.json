@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "enabled": true,
+  "hyprland": "lua",
+  "server": {
+    "url": "https://192.168.1.50:43125",
+    "ca_file": "/etc/school-voice/host.crt",
+    "token_file": "/etc/school-voice/device.token"
+  },
+  "whisper_model": "/opt/school-voice/models/whisper",
+  "wake_word": {
+    "enabled": true,
+    "phrase": "Hey Laya",
+    "model_dir": "/opt/school-voice/models/wake",
+    "threshold": 0.3,
+    "silence_seconds": 0.9
+  },
+  "apps": {
+    "math": {
+      "label": "Math Match",
+      "aliases": ["math", "math match", "sparkle math"],
+      "argv": ["/usr/local/bin/sparkle-math"],
+      "classes": ["sparkle-math", "Math Match"]
+    },
+    "calculator": {
+      "label": "Calculator",
+      "aliases": ["calculator", "the calculator"],
+      "argv": ["/usr/bin/gnome-calculator"],
+      "classes": ["org.gnome.Calculator"]
+    },
+    "writing": {
+      "label": "Text Editor",
+      "aliases": ["writing", "text editor", "my editor"],
+      "argv": ["/usr/bin/gnome-text-editor"],
+      "classes": ["org.gnome.TextEditor"]
+    }
+  },
+  "actions": ["volume_up", "volume_down", "mute", "unmute", "media_pause", "media_play", "close_window", "maximize", "restore"],
+  "workspaces": [1, 2, 3, 4]
+}

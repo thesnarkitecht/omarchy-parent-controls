@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=School Voice
+Comment=Speak to control your computer or dictate text
+Exec=/usr/local/bin/school-voice show
+Icon=audio-input-microphone
+Terminal=false
+Categories=Utility;Accessibility;
+StartupWMClass=school-voice

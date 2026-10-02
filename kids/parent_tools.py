@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-TOOLS = {'agent', 'windows-install', 'windows-launch'}
+TOOLS = {'agent', 'hermes-repair', 'windows-install', 'windows-launch'}
 
 def ensure_windows_stopped():
     if not Path('/usr/bin/docker').is_file():
@@ -25,6 +25,9 @@ def launch(tool):
         raise ValueError('Turn controlled mode off before opening parent tools.')
     if tool == 'agent':
         command = ['/usr/bin/omarchy','menu','summon','setup.default.agent']
+    elif tool == 'hermes-repair':
+        command = ['/usr/bin/omarchy-launch-floating-terminal-with-presentation',
+                   '/usr/bin/sudo /usr/bin/python3 -I /usr/local/lib/omarchy-kids/hermes_install.py']
     else:
         command = ['/usr/bin/omarchy-launch-floating-terminal-with-presentation',
                    '/usr/bin/python3 -I /usr/local/lib/omarchy-kids/parent_tools.py ' + tool]

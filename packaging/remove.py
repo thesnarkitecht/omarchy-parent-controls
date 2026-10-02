@@ -55,7 +55,11 @@ def main():
             run('/usr/bin/runuser','-u',user.pw_name,'--','/usr/bin/tee',str(Path(user.pw_dir)/relative),input=(backup/name).read_bytes(),stdout=subprocess.DEVNULL)
     # Authentication is restored before deleting any helper it depends on.
     if not args.recovery: restore_authentication(saved,user)
-    for unit in ('omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
+    if (STATE/'family.json').exists():
+        from family import revoke
+        from control import Store
+        revoke(Store())
+    for unit in ('omarchy-kids-remote','omarchy-kids-control','omarchy-kids-policy','omarchy-kids-rollback.timer'):
         run('/usr/bin/systemctl','disable','--now',unit,check=False)
     for path in Path('/etc/systemd/system').glob('omarchy-kids-*.service'): path.unlink()
     unlink('/etc/systemd/system/omarchy-kids-rollback.timer')
@@ -75,7 +79,7 @@ def main():
     if (STATE/'shared-folders.acl').exists():
         from native_policy import restore_acls
         restore_acls(STATE/'shared-folders.acl')
-    for name in ('omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url'):
+    for name in ('omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
         unlink('/usr/local/bin/'+name)
     original=STATE/'hermes-desktop.original'
     if original.exists(): shutil.copyfile(original,'/usr/local/bin/hermes-desktop');os.chmod('/usr/local/bin/hermes-desktop',0o755)
@@ -85,7 +89,7 @@ def main():
         launcher=Path('/usr/local/bin/hermes-desktop')
         launcher.write_text('#!/usr/bin/python3 -I\nimport os, sys\nos.environ.update('+repr(config.get('hermes_environment',{}))+')\nbinary='+repr(config['hermes_binary'])+'\nos.execv(binary,[binary,*sys.argv[1:]])\n')
         launcher.chmod(0o755)
-    for name in ('omarchy-kids.desktop','omarchy-kids-approved-browser.desktop','omarchy-kids-hermes.desktop'):
+    for name in ('omarchy-kids.desktop','omarchy-kids-approved-browser.desktop','omarchy-kids-hermes.desktop','little-screen.desktop'):
         unlink('/usr/local/share/applications/'+name)
     for path in Path('/usr/local/share/applications/omarchy-kids').glob('webapp-*.desktop'):
         path.unlink()

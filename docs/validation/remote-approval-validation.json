@@ -1,0 +1,14 @@
+[
+  {
+    "step": "child request visible remotely, not yet playable",
+    "passed": true
+  },
+  {
+    "step": "parent approval adds only exact video",
+    "passed": true
+  },
+  {
+    "step": "parent revocation removes video",
+    "passed": true
+  }
+]

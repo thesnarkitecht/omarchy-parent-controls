@@ -1,6 +1,12 @@
-# Release validation — 0.4.0-beta.3
+# Release validation — 0.4.0-beta.4 candidate
 
 Community beta tested September 25, 2026 on Arch Linux ARM, Omarchy 4.0.3, kernel 7.2.6. The existing desktop account is the controlled account. This is a supervised-rollout release, not a claim of comprehensive security or compatibility.
+
+## Hermes CLI repair — beta.4 candidate
+
+The official pinned installer completed in the ARM VM, and both its version/help commands and an interactive CLI prompt work as the child. All 63 automated tests pass on the ARM VM. The runtime-command update is applied with controlled mode on: default `hermes` and `hermes --cli` both reach their real interactive prompt, and actual mise, uv and Node executables run. Chromium, pacman, passwordless sudo, policy writes and the known Brave download hostname remain blocked. The first full setup attempt stopped because its trust check rejected uv advisory locks; that check is corrected with regression coverage. A complete installer retry and controls-off acceptance are still pending; do not treat this candidate as a validated release. Coverage includes installer checksum rejection before execution, fixed upstream commit and browser opt-out, keeping user data separate from the program runtime, backing up an existing command, and requiring privilege for repair.
+
+The VM's previous custom system installation already answered `hermes --version`; that is not evidence that the new official installer or a fresh machine works. Required live acceptance: clean official runtime installation, real terminal startup in both modes, existing browser/installer guards, and preservation of the child's Hermes configuration.
 
 ## Parent interface update — beta.3
 

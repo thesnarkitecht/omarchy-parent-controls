@@ -1,0 +1,26 @@
+[Unit]
+Description=Private parent app relay
+After=omarchy-kids-control.service
+Requires=omarchy-kids-control.service
+
+[Service]
+ExecStart=/usr/local/lib/omarchy-kids/run remote_http
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET
+IPAddressDeny=any
+IPAddressAllow=localhost
+RestrictSUIDSGID=yes
+CapabilityBoundingSet=
+LockPersonality=yes
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -40,6 +40,8 @@ else:
 shutil.copyfile(base / 'integration/omarchy-kids.desktop', apps / 'omarchy-kids.desktop')
 handler = Path('/usr/local/share/applications/omarchy-kids-approved-browser.desktop')
 if handler.exists(): shutil.copyfile(handler, apps / handler.name)
+for source in (Path('/usr/local/share/applications/little-screen.desktop'), Path('/usr/share/applications/school-voice.desktop')):
+    if source.exists(): shutil.copyfile(source, apps / source.name)
 for name in ('foot.desktop', 'footclient.desktop', 'org.gnome.Nautilus.desktop',
              'nvim.desktop', 'imv.desktop', 'imv-dir.desktop', 'mpv.desktop', 'btop.desktop',
              'org.gnome.Calculator.desktop', 'org.gnome.Papers.desktop',

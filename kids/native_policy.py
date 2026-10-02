@@ -17,6 +17,9 @@ STATE = Path('/var/lib/omarchy-kids-control')
 BOOT_ID = Path('/proc/sys/kernel/random/boot_id')
 AGENTS = {'pi','omp','opencode','claude','codex','grok','gemini','openclaw',
           'hermes','copilot','crush','cursor-agent','muse'}
+# Runtime/package commands are ordinary terminal tools. Denying them breaks
+# Omarchy's agent harnesses; browser execution and root changes are separate.
+RUNTIME_COMMANDS = {'mise','uv','uvx','pip','pip3','pipx','npm','npx','pnpm','yarn'}
 BANNED = (
     'code', 'cursor',
     'chromium', 'firefox', 'google-chrome', 'google-chrome-stable', 'brave', 'brave-browser',
@@ -24,8 +27,8 @@ BANNED = (
     'epiphany', 'falkon', 'qutebrowser', 'dillo', 'cog', 'lynx', 'links', 'w3m',
     'discord', 'signal-desktop', 'telegram-desktop', 'slack', 'zoom', 'thunderbird', 'localsend',
     'hermes', 'claude', 'codex', 'copilot', 'crush', 'cursor-agent', 'gemini', 'grok', 'muse', 'omp',
-    'openclaw', 'opencode', 'pi', 'mise', 'uv', 'pip', 'pip3', 'pipx', 'yay', 'paru',
-    'pacman', 'pamac', 'flatpak', 'snap', 'docker', 'podman', 'nerdctl', 'npm', 'pnpm', 'yarn',
+    'openclaw', 'opencode', 'pi', 'yay', 'paru',
+    'pacman', 'pamac', 'flatpak', 'snap', 'docker', 'podman', 'nerdctl',
     'wine', 'wine64', 'wineserver', 'winetricks', 'lutris', 'bottles',
     'qemu-system-x86_64', 'qemu-system-aarch64', 'virtualbox', 'VBoxManage',
 )
@@ -46,12 +49,19 @@ def model_rule(config, uid):
     return f'  meta skuid {uid} {family} daddr {host} tcp dport {port} accept\n'
 
 
-def targets():
-    values = set()
+def denied_commands():
     denied_file = Path('/etc/omarchy-kids/denied-commands.json')
     denied = json.loads(denied_file.read_text()) if denied_file.exists() else BANNED
     if not isinstance(denied, (list,tuple)) or not all(isinstance(x,str) and re.fullmatch(r'[A-Za-z0-9_.+-]+',x) for x in denied):
         raise ValueError('Invalid command denylist')
+    # Migrate existing installations too: setup historically unions the old
+    # denylist with defaults, so removing names from BANNED alone is not enough.
+    return set(denied) - RUNTIME_COMMANDS
+
+
+def targets():
+    values = set()
+    denied = denied_commands()
     selected_file = STATE / 'approved-agent'
     selected = selected_file.read_text().strip() if selected_file.exists() else 'hermes'
     denied = [name for name in denied if name != selected or selected not in AGENTS]
@@ -59,6 +69,12 @@ def targets():
         for name in denied:
             p = Path(base) / name
             if p.is_file(): values.add(p.resolve())
+    # Apply remaining app restrictions to alternate paths in the runtime too.
+    hermes_root = Path('/opt/omarchy-parent-controls-hermes')
+    if hermes_root.exists():
+        for p in hermes_root.rglob('*'):
+            if p.name in denied and p.is_file() and os.access(p, os.X_OK):
+                values.add(p.resolve())
     for folder in ('/usr/lib/chromium', '/opt/google/chrome', '/usr/lib/firefox', '/opt/brave-bin'):
         root = Path(folder)
         if root.exists():

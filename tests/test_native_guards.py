@@ -87,3 +87,33 @@ class Guards(unittest.TestCase):
             with self.assertRaises(ValueError):
                 managed_hermes.launch(1001)
             run.assert_not_called()
+
+    def test_runtime_tools_are_allowed_on_fresh_and_upgraded_installs(self):
+        self.assertFalse(native_policy.RUNTIME_COMMANDS.intersection(native_policy.BANNED))
+        # A stored beta.3 list must not keep old restrictions alive on upgrade.
+        with patch.object(native_policy.Path,'exists',return_value=True), \
+             patch.object(native_policy.Path,'read_text',return_value=json.dumps(
+                 [*native_policy.RUNTIME_COMMANDS,'chromium','brave','pacman','custom-denied'])):
+            denied=native_policy.denied_commands()
+            self.assertEqual(denied,{'chromium','brave','pacman','custom-denied'})
+
+    def test_invalid_saved_denylist_still_fails_closed(self):
+        for value in [['mise','../chromium'],['uv',42],{'uv':True}]:
+            with patch.object(native_policy.Path,'exists',return_value=True), \
+                 patch.object(native_policy.Path,'read_text',return_value=json.dumps(value)):
+                with self.assertRaises(ValueError):native_policy.denied_commands()
+
+    def test_policy_refresh_restores_previous_denials_before_applying_current_rules(self):
+        # The first part of apply must restore old ACLs even if no runtime tool
+        # remains in the new denylist. Otherwise permitting mise has no effect.
+        events=[]
+        with tempfile.TemporaryDirectory() as folder:
+            state=Path(folder);(state/'native-acls.txt').write_text('saved ACL')
+            with patch.object(native_policy,'STATE',state), \
+                 patch.object(native_policy,'account',return_value={'uid':1000,'user':'child'}), \
+                 patch.object(native_policy.pwd,'getpwnam',return_value=SimpleNamespace(pw_dir='/home/child')), \
+                 patch.object(native_policy,'targets',return_value=[Path('/usr/bin/chromium')]), \
+                 patch.object(native_policy,'restore_acls',side_effect=lambda p:events.append('restore')), \
+                 patch.object(native_policy,'command',side_effect=RuntimeError('stop before mutations')):
+                with self.assertRaisesRegex(RuntimeError,'stop before mutations'):native_policy.apply()
+                self.assertEqual(events,['restore'])

@@ -66,6 +66,22 @@ class Store:
         if not isinstance(req, dict):
             raise ValueError("Invalid request.")
         action = req.get("action")
+        if action == 'family-status':
+            from family import public
+            return public(self)
+        if action == 'voice-catalog':
+            from family import voice_catalog
+            return voice_catalog(self)
+        if action == 'remote-parent':
+            from family import remote
+            return remote(self, req.get('envelope'))
+        if action == 'family-change':
+            from family import read, apply, public
+            self.authenticate(req.get('pin'))
+            state = read(self)
+            apply(self, state, req.get('operation'), req.get('fields', {}))
+            self.save('family.json', state)
+            return public(self)
         if action == "status":
             return {"policy": self.read("policy.json"), "catalog": {
                 key: {**app, "installed": Path(app["binary"]).is_file()} for key, app in CATALOG.items()
@@ -116,7 +132,10 @@ class Handler(socketserver.StreamRequestHandler):
             if len(raw) > LIMIT or not raw.endswith(b"\n"):
                 raise ValueError("Invalid request size.")
             req = json.loads(raw)
-            if isinstance(req, dict) and req.get("action") == "launch-hermes":
+            if isinstance(req, dict) and req.get('action') in ('ask-parent', 'remote-enroll', 'remote-revoke'):
+                _, uid, _ = struct.unpack('3i', self.connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+                response = peer_action(self.server.store, req, uid)
+            elif isinstance(req, dict) and req.get("action") == "launch-hermes":
                 from managed_hermes import launch
                 _, uid, _ = struct.unpack("3i", self.connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
                 response = launch(uid)
@@ -139,6 +158,21 @@ class Handler(socketserver.StreamRequestHandler):
             self.wfile.flush()
         except OSError:
             pass
+
+def peer_action(store, req, uid):
+    from family import submit, enroll, revoke
+    if req['action'] == 'ask-parent':
+        from native_runtime import account
+        if uid != account()['uid']:
+            raise ValueError('Requests must come from the school desktop account.')
+        return submit(store, req.get('request'))
+    if uid != 0:
+        raise ValueError('Pairing and revocation require parent administrator access.')
+    if req['action'] == 'remote-enroll':
+        return {'pairing': enroll(store, req.get('endpoint'), req.get('name'))}
+    if req['action'] == 'remote-revoke':
+        return revoke(store)
+    raise ValueError('Unknown peer action.')
 
 def main():
     if os.geteuid() != 0:
