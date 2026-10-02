@@ -49,3 +49,19 @@ class PairingCodeTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.status(pair,'disable-controls')
         with self.assertRaises(ValueError):code.normalize('123456')
         with self.assertRaises(ValueError):code.normalize('IIII-OOOO-1111-0000')
+
+    def test_pairing_terminal_shows_code_without_printing_credentials(self):
+        import contextlib, io, pair_parent
+        pair=self.enroll(); config=Path(self.tmp.name)/'relay.json';config.write_text('{}')
+        output=io.StringIO()
+        with patch.object(pair_parent.os,'geteuid',return_value=0), patch.object(pair_parent,'RELAY',config), \
+             patch.object(pair_parent,'prepare_relay',return_value=(pair['endpoint'],self.relay)), \
+             patch.object(pair_parent,'request',return_value={'pairing':pair}) as request, \
+             patch.object(pair_parent,'command') as command, \
+             patch('pairing_code.publish',return_value=('ABCD-EFGH-JKLM-NPQR',1300)), contextlib.redirect_stdout(output):
+            self.assertEqual(pair_parent.main(['--qr','--name','School']),0)
+        self.assertIn('ABCD-EFGH-JKLM-NPQR',output.getvalue())
+        self.assertNotIn(pair['token'],output.getvalue())
+        self.assertNotIn(pair['relay_token'],output.getvalue())
+        self.assertTrue(request.call_args.kwargs['temporary'])
+        self.assertEqual(command.call_args.kwargs['input'],'ABCD-EFGH-JKLM-NPQR')

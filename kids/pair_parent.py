@@ -56,6 +56,7 @@ def main(argv=None):
     p.add_argument('--endpoint', help='Use an already-configured private endpoint (advanced)')
     p.add_argument('--name', default=socket.gethostname().split('.')[0][:60] or 'School laptop')
     p.add_argument('--revoke-all', action='store_true')
+    p.add_argument('--legacy-qr', action='store_true', help='Advanced: full-credential QR for relays without short-code support')
     p.add_argument('--qr', action='store_true', help='Show a QR code in this private parent terminal')
     p.add_argument('--wait', action='store_true', help='Keep the pairing screen open until Enter')
     args = p.parse_args(argv)
@@ -76,8 +77,8 @@ def main(argv=None):
                 endpoint, relay = prepare_remote(args.endpoint), None
             else:
                 endpoint, relay = prepare_relay()
-            reply = request('remote-enroll', endpoint=endpoint, name=args.name, relay=relay, temporary=bool(relay))
-            if relay:
+            reply = request('remote-enroll', endpoint=endpoint, name=args.name, relay=relay, temporary=bool(relay) and not args.legacy_qr)
+            if relay and not args.legacy_qr:
                 from pairing_code import publish
                 from datetime import datetime
                 code, expires = publish(reply['pairing'], json.loads(RELAY.read_text()))
@@ -90,7 +91,7 @@ def main(argv=None):
                 if args.qr:
                     command('/usr/bin/qrencode', '-t', 'ANSIUTF8', input=code, text=True)
             else:
-                print('\nScan this legacy private-endpoint pairing in Parent Pocket.\n')
+                print('\nScan this legacy pairing in Parent Pocket. Keep the QR private.\n')
                 command('/usr/bin/qrencode', '-t', 'ANSIUTF8', input=json.dumps(reply['pairing']), text=True)
         if args.wait:
             input('\nPress Enter to hide this code and close. ')
