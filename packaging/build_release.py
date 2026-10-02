@@ -50,11 +50,11 @@ def build(repository,output,root=ROOT):
 set -euo pipefail
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT
-curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \\
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \\
   '@URL@' --output "$tmp/release.tar.gz"
 printf '%s  %s\\n' '@SHA@' "$tmp/release.tar.gz" | sha256sum --check --status
 tar --extract --gzip --file "$tmp/release.tar.gz" --directory "$tmp" --no-same-owner
-bash "$tmp/omarchy-parent-controls/install.sh" "$@"
+bash "$tmp/omarchy-parent-controls/install.sh" "$@" </dev/tty
 '''.replace('@URL@',url).replace('@SHA@',digest)
     (output/'bootstrap.sh').write_text(bootstrap)
     (output/'bootstrap.sh').chmod(0o755)

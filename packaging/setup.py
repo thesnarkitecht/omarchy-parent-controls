@@ -98,6 +98,7 @@ def main():
     previous=json.loads((ETC/'account.json').read_text()) if (ETC/'account.json').exists() else {}
     if previous and previous['uid'] != user.pw_uid:
         raise ValueError('Only one controlled desktop account is supported per computer.')
+    controlled = not previous or (ETC/'controlled-on').exists()
     config={**previous,'user':user.pw_name,'uid':user.pw_uid,'plugin_id':PLUGIN_ID}
     candidate=args.hermes_binary or config.get('hermes_binary')
     if candidate:
@@ -140,7 +141,7 @@ def main():
         path.mkdir(parents=True,exist_ok=True)
     for item in (SOURCE/'kids').glob('*.py'): copy(item,LIB/item.name)
     copy(SOURCE/'native/native-ui.py',LIB/'native-ui.py')
-    for name in ('run','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
+    for name in ('run','omarchy-parent-controls','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
         copy(SOURCE/'bin'/name,LIB/'run' if name=='run' else Path('/usr/local/bin')/name,0o755)
     copy(SOURCE/'native/pam-pin',LIB/'pam-pin',0o755)
     copy(SOURCE/'native/windows-pkexec',LIB/'windows-tools/pkexec',0o755)
@@ -224,16 +225,20 @@ def main():
         subprocess.run(['/usr/bin/gpasswd','-d',user.pw_name,group],capture_output=True)
     run('/usr/bin/usermod','--lock','root')
     run('/usr/bin/systemctl','enable','omarchy-kids-policy.service')
-    run('/usr/bin/systemctl','start','omarchy-kids-enable.service')
+    run('/usr/bin/systemctl','start','omarchy-kids-enable.service' if controlled else 'omarchy-kids-disable.service')
     write(ETC/'native-confirmed','PIN authentication configured\n')
     run('/usr/bin/systemctl','disable','--now','omarchy-kids-rollback.timer')
-    if args.voice_pairing:
+    if args.voice_pairing or Path('/etc/school-voice/policy.json').exists():
         sys.path.insert(0, str(SOURCE/'packaging'))
         from install_voice import install
         install(SOURCE, args.voice_pairing, user)
     as_user(user,'/usr/bin/xdg-mime','default','omarchy-kids-approved-browser.desktop','x-scheme-handler/http','x-scheme-handler/https')
     environment={**os.environ,'OMARCHY_PATH':'/usr/share/omarchy','XDG_RUNTIME_DIR':'/run/user/'+str(user.pw_uid)}
     as_user(user,'/usr/bin/omarchy','bar','put','thesnarkitecht.kids-lockdown','--after','omarchy.clock',env=environment)
+    run('/usr/bin/systemctl','try-restart','omarchy-kids-remote.service')
+    from control import atomic_json
+    atomic_json(LIB/'release.json', {'version':json.loads((SOURCE/'manifest.json').read_text())['version']})
+    os.chmod(LIB/'release.json', 0o644)
     print('Parent controls installed. Open the lock icon in the bar. Keep your PIN private.')
 
 def migrate_plugin(user,old_id):

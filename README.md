@@ -1,10 +1,10 @@
 # Parent Controls for Omarchy
 
-**0.5.0-alpha.4 — source preview.** Validates Linux sandbox isolation and web-app audio in an Omarchy VM, fixes local voice capture and Wayland web-app targeting, and includes URL-first approvals, a sandbox launcher for terminal Hermes, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [new validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. This source update does not publish a new release or deploy to school computers; Physical school-machine and iPhone testing remains pending.
+**0.5.0-alpha.5 — preview release.** Includes a curl installer, parent-authorized CLI updates, executable coding workspaces, integrated voice, child requests, the parent-iPhone API and Little Screen. See [the family setup guide](FAMILY.md) and [VM validation](FAMILY-VALIDATION.md). Parent Pocket and the Laya host service remain separate projects. Physical school-machine and iPhone testing remains pending.
 
 Keep the normal Omarchy desktop, with parent-approved webapps and a private parent PIN for administration.
 
-**The earlier 0.4 beta was validated on an Omarchy 4 ARM VM. The new 0.5 features have not been validated on that VM.** Start with a supervised installation and check your child's workflow before relying on it. Fresh-machine and x86_64 testing are still needed. This is an independent plugin, not an official or security-audited Omarchy product.
+**The 0.5 controls have been tested in an Omarchy 4 ARM VM.** Start with a supervised installation and check your child's workflow before relying on it. Fresh-machine and x86_64 testing are still needed. This is an independent plugin, not an official or security-audited Omarchy product.
 
 ## What children can use
 
@@ -28,20 +28,29 @@ Remote parent access can use the free Tailscale Personal plan for eligible famil
 - Python, PySide6, Chromium, nftables and ACL tools; the installer installs these through pacman. First installation also installs Calculator, Papers, File Roller and Text Editor unless `--skip-apps` is supplied. Updates preserve the existing app set.
 - Managed Hermes **Desktop** requires a root-owned upstream desktop binary and a local model server at a fixed IP/port. The separate terminal Hermes supports provider configuration within its sandbox and requires bubblewrap with unprivileged user namespaces. The installer installs bubblewrap.
 
-## Install from a reviewed release
+## Install with one command
 
-The version-pinned installer verifies the archive's SHA-256 before extracting it:
-
-```bash
-# This development version is not published. From the reviewed source:
-bash install.sh
-```
-
-Download and extract the published release, verify its SHA-256 checksum, and run:
+Run this in a terminal on the child's Omarchy computer:
 
 ```bash
-bash install.sh
+curl -fsSL https://github.com/thesnarkitecht/omarchy-parent-controls/releases/download/v0.5.0-alpha.5/bootstrap.sh | bash
 ```
+
+This version-pinned preview installer verifies the release archive's SHA-256 before extracting it. The installer reads passwords from the terminal, so piping it from curl works. To review first, download `bootstrap.sh`, read it, then run `bash bootstrap.sh`. To pass setup options through the pipeline, use `bash -s -- --with-hermes` (or `--voice-pairing /path/to/pairing`) in place of `bash`. From a root terminal, also pass `--user CHILD_USERNAME`.
+
+### Update and manage the service
+
+```bash
+omarchy-parent-controls update          # parent PIN; download, verify, install and restart
+omarchy-parent-controls update --check  # read-only check; no PIN
+omarchy-parent-controls version
+omarchy-parent-controls status
+omarchy-parent-controls restart         # parent PIN
+```
+
+Updates keep the existing parent PIN, website/video approvals, pairing and app settings, and the current controlled mode. Integrated voice is updated when already installed; log out and back in to restart an existing voice session. Each CLI update saves a private settings backup under `/var/lib/omarchy-kids-control/update-backups/`. Download or checksum failures stop before installation. An installation failure reports its backup location; installation is not transactional and does not automatically roll back.
+
+Preview installations follow newer published previews and stable releases; once a stable release is installed, subsequent updates stay on stable releases. Updates never downgrade, and no update runs automatically. An older installation without this CLI can use the curl command above once to gain it. Checksums protect against corrupted/mismatched downloads; GitHub and this repository remain the trust source, not an independent signature.
 
 Initial installation asks for the existing administrator password, then an 8–12 digit parent PIN. The child login password continues to unlock the desktop but no longer authorizes sudo. Setup removes privileged group membership and locks direct root-password login. The parent PIN is required for sudo even while controlled mode is off.
 
@@ -102,6 +111,6 @@ Use `~/Projects/Workspace` for projects (the actual directory is `/var/lib/omarc
 
 Agent settings and conversations now persist in `/var/lib/omarchy-hermes-state/UID`, mounted as `/home/agent/.hermes`. Existing `~/.hermes` and the prior CLI launcher are preserved, but the old state is not automatically imported into the sandbox. This separation avoids exposing unrelated home/session configuration. Normal terminals remain outside the Hermes sandbox; see [SECURITY.md](SECURITY.md) for that important scope limit.
 
-After installation, run `python3 tests/integration_hermes_sandbox.py` from the reviewed source as the child, without sudo. It tests the actual namespace, privilege restrictions, hidden parent/session paths, executable project scripts, Python venv, Git and the upstream Hermes launcher. This check has not yet been run on a target machine for alpha.2.
+After installation, run `python3 tests/integration_hermes_sandbox.py` from the reviewed source as the child, without sudo. It tests the actual namespace, privilege restrictions, hidden parent/session paths, executable project scripts, Python venv, Git and the upstream Hermes launcher. This check passed in the Omarchy ARM VM; physical school-machine testing remains pending.
 
 If you select Hermes later, turn controls off, then use **Parent tools → Install or repair Hermes**. The terminal requests the parent PIN through sudo. This does not change the chosen agent. Return to controlled mode afterward. The same repair is available as `sudo python3 -I /usr/local/lib/omarchy-kids/hermes_install.py`. Program updates require parent authorization; Hermes cannot rewrite its system-owned runtime. Removing parental controls retains the installed Hermes command and family data.

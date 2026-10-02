@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 case "${1-}" in
-  control|admin|bridge|remote_http|pair_parent|videos|hermes_cli|audio_proxy) module=$1; shift ;;
+  update|control|admin|bridge|remote_http|pair_parent|videos|hermes_cli|audio_proxy) module=$1; shift ;;
   *) echo 'Internal entry point: control, admin or bridge' >&2; exit 64 ;;
 esac
 exec /usr/bin/python3 -I -c 'import importlib,sys; sys.path.insert(0,"/usr/local/lib/omarchy-kids"); module=sys.argv.pop(1); raise SystemExit(importlib.import_module(module).main())' "$module" "$@"

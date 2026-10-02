@@ -80,7 +80,7 @@ def main():
     if (STATE/'shared-folders.acl').exists():
         from native_policy import restore_acls
         restore_acls(STATE/'shared-folders.acl')
-    for name in ('omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
+    for name in ('omarchy-parent-controls','omarchy-kids','omarchy-kids-admin','omarchy-kids-webapp','omarchy-kids-open-url','omarchy-kids-videos'):
         unlink('/usr/local/bin/'+name)
     original=STATE/'hermes-desktop.original'
     if original.exists(): shutil.copyfile(original,'/usr/local/bin/hermes-desktop');os.chmod('/usr/local/bin/hermes-desktop',0o755)
