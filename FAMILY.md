@@ -67,10 +67,10 @@ On a supervised Omarchy test installation, run `python3 tests/integration_hermes
 The new managed connection requires the protocol-v2 Parent Pocket build and an activated relay deployment. See [deployment status](docs/REMOTE-ACCESS.md); it is not yet enabled in the published alpha.6 release.
 
 1. On the laptop, open the lock icon and choose **Pair parent phone**.
-2. Enter the parent PIN. Scan the QR in Parent Pocket on your iPhone.
+2. Enter the parent PIN. Type the displayed code into Parent Pocket on your iPhone or iPhone Simulator. Scanning its QR is optional.
 3. The connection starts automatically and reconnects when the laptop comes online. No VPN, port forwarding, domain purchase, or per-laptop URL setup.
 
-`omarchy-parent-controls pair` opens the same flow from a terminal. Keep the QR private: it grants parent access. The root broker stores its token hash and derived encryption keys. The connector and hosted relay cannot decrypt parent commands.
+`omarchy-parent-controls pair` opens the same flow from a terminal. Keep the code private: it grants parent access. It has four groups of four characters, expires after five minutes, and can be claimed once. Generate a fresh code on the laptop if needed; doing so invalidates its older unused code. The root broker stores its token hash and derived encryption keys. The connector and hosted relay cannot decrypt parent commands.
 
 The phone can approve pasted app URLs, approve individual videos, review child requests, change voice settings, see approximate daily/week unlocked desktop usage, and Pause/Resume access. Pause freezes running work in memory and blocks child login; it persists across reboot, although reboot itself does not preserve unsaved work. Screen time uses logind activity/idle/lock signals; it is approximate total desktop time, not per-app history or tamperproof accounting.
 

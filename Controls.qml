@@ -146,7 +146,7 @@ Item {
             Action { width: parent.width; text: root.state.active ? "Turn controlled mode off" : "Turn controlled mode on"; selected: true; onClicked: root.approve({action: root.state.active ? "disable-controls" : "enable-controls"}) }
             Label { width: parent.width; visible: !!root.state.family.screen_time; text: root.state.family.screen_time ? "Screen time today: " + Math.floor(root.state.family.screen_time.today_seconds / 60) + " min · unlocked desktop time" : "" }
             Label { width: parent.width; visible: !!root.state.family.access && root.state.family.access.paused; text: "Computer paused by a parent"; color: Color.accent }
-            Action { width: parent.width; text: "Pair parent phone · show QR"; onClicked: root.call({action:"open-pairing"}) }
+            Action { width: parent.width; text: "Pair parent phone · get code"; onClicked: root.call({action:"open-pairing"}) }
             Label { width: parent.width; text: "Scan once in Parent Pocket. The setup window asks for your parent PIN and guides the private connection."; opacity: 0.65 }
             Action { width: parent.width; text: "Voice, videos & requests"; onClicked: { root.page = "family"; voicePhrase.text = root.state.family.voice.phrase } }
             Action { width: parent.width; text: "Little Screen · watch or ask a parent"; onClicked: { Quickshell.execDetached(["/usr/local/bin/omarchy-kids-videos"]); root.dismiss() } }

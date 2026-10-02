@@ -176,7 +176,7 @@ def peer_action(store, req, uid):
         change(req.get('paused'))
         return status()
     if req['action'] == 'remote-enroll':
-        return {'pairing': enroll(store, req.get('endpoint'), req.get('name'), req.get('relay'))}
+        return {'pairing': enroll(store, req.get('endpoint'), req.get('name'), req.get('relay'), req.get('temporary', False))}
     if req['action'] == 'remote-revoke':
         return revoke(store)
     raise ValueError('Unknown peer action.')

@@ -4,7 +4,7 @@ The new default is the managed encrypted relay in [`relay/`](../relay/README.md)
 
 **Relay deployed and verified on 2026-10-02:** `https://parent-pocket-relay.onrender.com`. The source pairing configuration now includes this verified origin. The published alpha.6 installer still uses the older direct HTTPS setup; the new connection remains part of the unreleased alpha.7 source and protocol-v2 Parent Pocket build.
 
-After activation: open the laptop lock icon → **Pair parent phone** → enter the parent PIN → scan with Parent Pocket. There is no URL to paste in normal pairing. `omarchy-parent-controls pair` does the same from a terminal. `omarchy-parent-controls unpair` revokes all phones; `omarchy-parent-controls resume` provides a PIN-authorized local recovery command.
+After activation: open the laptop lock icon → **Pair parent phone** → enter the parent PIN → enter the displayed code in Parent Pocket. The iPhone Simulator uses the same code field; no camera, JSON, or URL is required. Codes expire after five minutes and are single-use. A new code invalidates older unused codes on that laptop. `omarchy-parent-controls pair` does the same from a terminal. `omarchy-parent-controls unpair` revokes all phones; `omarchy-parent-controls resume` provides a PIN-authorized local recovery command.
 
 The encrypted relay carries only bounded parent operations and Laya suggestion requests. Laya audio capture and transcription stay on the laptop; actions are checked and executed on the laptop. Local dictation continues without the relay. The laptop and the Laya host must be awake for their respective remote functions. Offline commands are never queued for later execution.
 

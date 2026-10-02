@@ -1,4 +1,4 @@
-"""Parent-authorized QR pairing with automatic managed relay setup."""
+"""Parent-authorized short-code pairing with automatic managed relay setup."""
 import argparse
 import hashlib
 import secrets
@@ -76,12 +76,22 @@ def main(argv=None):
                 endpoint, relay = prepare_remote(args.endpoint), None
             else:
                 endpoint, relay = prepare_relay()
-            reply = request('remote-enroll', endpoint=endpoint, name=args.name, relay=relay)
-            print('\nOpen Parent Pocket → Pair a school computer → Scan pairing code.\nPair once. Your phone connects automatically whenever this laptop is awake and online.\n')
-            if args.qr or not args.endpoint:
+            reply = request('remote-enroll', endpoint=endpoint, name=args.name, relay=relay, temporary=bool(relay))
+            if relay:
+                from pairing_code import publish
+                from datetime import datetime
+                code, expires = publish(reply['pairing'], json.loads(RELAY.read_text()))
+                print('\n  PAIR PARENT PHONE\n')
+                print('  ' + code + '\n')
+                print('Open Parent Pocket → Pair a school computer → Enter this code.')
+                print('Works on iPhone and in the iPhone Simulator.')
+                print('One use · expires at ' + datetime.fromtimestamp(expires).strftime('%H:%M') + '.')
+                print('Keep it private. Generate a new code here if it expires.\n')
+                if args.qr:
+                    command('/usr/bin/qrencode', '-t', 'ANSIUTF8', input=code, text=True)
+            else:
+                print('\nScan this legacy private-endpoint pairing in Parent Pocket.\n')
                 command('/usr/bin/qrencode', '-t', 'ANSIUTF8', input=json.dumps(reply['pairing']), text=True)
-            print('\nOr paste this pairing text in Parent Pocket:\n' + json.dumps(reply['pairing']))
-            print('\nThis code grants parent access. Keep it private.')
         if args.wait:
             input('\nPress Enter to hide this code and close. ')
             print('\033[2J\033[3J\033[H', end='', flush=True)
