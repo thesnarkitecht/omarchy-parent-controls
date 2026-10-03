@@ -38,7 +38,7 @@ def website(value, name=''):
     site = origin(value)
     host = urlsplit(site).hostname
     if youtube_host(host):
-        raise ValueError('Add an individual video to Little Screen instead of approving YouTube.')
+        raise ValueError('Add an individual video to Videos instead of approving YouTube.')
     label = short_text(name, 60) if name.strip() else host.removeprefix('www.')[:60]
     # Use the normalized origin (including IDNA), retaining only the URL path,
     # query and fragment supplied by the parent. Never fetch untrusted metadata.
@@ -87,7 +87,7 @@ def public(store):
     state = read(store)
     from activity import summary
     from access_control import status as access_status
-    return {"screen_time": summary(store.path), "access": access_status(), "paired_phones": sum(1 for p in state['phones'] if 'pairing_expires' not in p), "name": state['name'], "requests": state['requests'], "videos": state['videos'],
+    return {"screen_time": summary(store.path), "access": access_status(), "child_name": state.get("child_name", ""), "capabilities": ["child-profile", "edit-webapp", "clear-webapp-data", "change-pin", "set-native-app", "setup-pin"], "paired_phones": sum(1 for p in state['phones'] if 'pairing_expires' not in p), "name": state['name'], "requests": state['requests'], "videos": state['videos'],
             "voice": state['voice'], "policy": store.read('policy.json'),
             "controlled": Path('/etc/omarchy-kids/controlled-on').exists(),
             "requestable_apps": [{'id': key, 'name': app['name']} for key, app in CATALOG.items() if Path(app['binary']).is_file()],
@@ -124,6 +124,7 @@ def enroll(store, endpoint, name, relay=None, temporary=False):
         record['keys'] = keys(token, key)
     if temporary:
         record['pairing_expires'] = int(store.clock()) + 300
+        record['setup_expires'] = int(store.clock()) + 300
     state['phones'].append(record)
     store.save('family.json', state)
     return {'version': 2 if relay else 1, 'id': key, 'name': state['name'], 'endpoint': endpoint,
@@ -148,7 +149,7 @@ def submit(store, request):
     if kind == 'website':
         target = origin(target)  # Deliberately approve only the requested exact host.
         if youtube_host(urlsplit(target).hostname):
-            raise ValueError('Request a single video for Little Screen instead of the YouTube website.')
+            raise ValueError('Request a single video for Videos instead of the YouTube website.')
     elif kind == 'video':
         target = video_id(target)
     elif kind == 'app':
@@ -224,6 +225,52 @@ def apply(store, state, operation, fields):
             key = 'web-' + hashlib.sha256(url.encode()).hexdigest()[:24]
             policy['webapps'].append({'id': key, 'name': name, 'url': url, 'origins': [site]})
         save_policy(store, policy)
+    elif operation == 'edit-webapp':
+        if set(fields) != {'app_id', 'name', 'url', 'origins'} or not isinstance(fields['origins'], list) or len(fields['origins']) > 12:
+            raise ValueError('Invalid web app settings.')
+        policy = store.read('policy.json')
+        app = next((a for a in policy['webapps'] if a['id'] == fields['app_id']), None)
+        if app is None:
+            raise ValueError('This web app no longer exists.')
+        name, url, site = website(fields['url'], fields['name'])
+        sites = [site]
+        for value in fields['origins']:
+            _, _, approved = website(value, '')
+            if approved not in sites: sites.append(approved)
+        app.update(name=name, url=url, origins=sites)
+        save_policy(store, policy)
+    elif operation == 'clear-webapp-data':
+        if set(fields) != {'app_id'}:
+            raise ValueError('Choose a web app.')
+        from webapp_data import clear
+        clear(fields['app_id'], store.read('policy.json'))
+    elif operation == 'set-profile':
+        if set(fields) != {'name', 'computer_name'}:
+            raise ValueError('Enter the child’s name and computer name.')
+        state['child_name'] = short_text(fields['name'], 60)
+        state['name'] = short_text(fields['computer_name'], 60)
+    elif operation == 'change-pin':
+        if set(fields) != {'current_pin', 'new_pin', 'confirm'}:
+            raise ValueError('Enter the current and new parent PIN.')
+        if fields['new_pin'] != fields['confirm']:
+            raise ValueError('The new PINs do not match.')
+        from core import pin_record
+        store.authenticate(fields['current_pin'])
+        store.save('pin.json', pin_record(fields['new_pin']))
+    elif operation == 'set-native-app':
+        if set(fields) != {'app_id', 'enabled'} or type(fields['enabled']) is not bool or not isinstance(fields['app_id'], str):
+            raise ValueError('Choose an installed school app.')
+        key = fields['app_id']
+        if key not in CATALOG or not Path(CATALOG[key]['binary']).is_file():
+            raise ValueError('Install this app on the laptop first.')
+        policy = store.read('policy.json')
+        if fields['enabled']:
+            from sandbox import trusted_executable
+            trusted_executable(CATALOG[key]['binary'])
+            if key not in policy['native']: policy['native'].append(key)
+        else:
+            policy['native'] = [item for item in policy['native'] if item != key]
+        save_policy(store, policy)
     elif operation == 'add-video':
         if not {'url'} <= set(fields) <= {'url', 'name'}:
             raise ValueError("Invalid video.")
@@ -266,7 +313,7 @@ def put_video(state, key, name):
     state['videos'] = videos + [{'id': key, 'name': name}]
 
 
-def remote(store, envelope):
+def remote(store, envelope, encrypted=False):
     if not isinstance(envelope, dict) or set(envelope) != {'token', 'id', 'issued', 'operation', 'fields'}:
         raise ValueError("Invalid parent request.")
     state = read(store)
@@ -292,17 +339,32 @@ def remote(store, envelope):
         return public(store)
     if 'pairing_expires' in phone:
         raise ValueError('Finish pairing this phone before making changes.')
-    fingerprint = hashlib.sha256(__import__('json').dumps([operation, fields], sort_keys=True).encode()).hexdigest()
+    if operation in ('change-pin', 'setup-pin') and not encrypted:
+        raise ValueError('PIN changes require the encrypted connection. Pair this phone again.')
+    # The raw phone token is never stored; keyed receipts do not expose a fast
+    # offline guessing oracle for the low-entropy PIN fields.
+    fingerprint = hmac.new(token.encode(), __import__('json').dumps([operation, fields], sort_keys=True).encode(), hashlib.sha256).hexdigest()
     state['receipts'] = [r for r in state['receipts'] if r['time'] > store.clock() - 300]
-    for receipt in state['receipts']:
+    receipts = state['receipts'] + ([phone['pin_receipt']] if 'pin_receipt' in phone else [])
+    for receipt in receipts:
         if receipt['id'] == rid and receipt['phone'] == phone['id']:
             if receipt['fingerprint'] != fingerprint:
                 raise ValueError("Request ID already used.")
             return public(store)
     if len([r for r in state['receipts'] if r['time'] > store.clock() - 60]) >= 30:
         raise ValueError("Too many changes. Wait a moment.")
-    apply(store, state, operation, fields)
-    state['receipts'].append({'id': rid, 'phone': phone['id'], 'fingerprint': fingerprint, 'time': int(store.clock())})
+    if operation == 'setup-pin':
+        if set(fields) != {'new_pin'} or phone.get('setup_expires', 0) <= store.clock():
+            raise ValueError('Get a fresh pairing code to set the app PIN on this laptop.')
+        from core import pin_record
+        store.save('pin.json', pin_record(fields['new_pin']))
+        del phone['setup_expires']
+    else:
+        apply(store, state, operation, fields)
+    receipt = {'id': rid, 'phone': phone['id'], 'fingerprint': fingerprint, 'time': int(store.clock())}
+    state['receipts'].append(receipt)
+    if operation in ('setup-pin', 'change-pin'):
+        phone['pin_receipt'] = receipt
     store.save('family.json', state)
     return public(store)
 
@@ -315,7 +377,7 @@ def voice_catalog(store):
     for key, label, binary, cls, aliases in [
         ('calculator', 'Calculator', '/usr/bin/gnome-calculator', 'org.gnome.Calculator', ['calculator']),
         ('editor', 'Text Editor', '/usr/bin/gnome-text-editor', 'org.gnome.TextEditor', ['editor', 'notes']),
-        ('videos', 'Little Screen', '/usr/local/bin/omarchy-kids-videos', 'little-screen', ['little screen', 'my videos', 'videos']),
+        ('videos', 'Videos', '/usr/local/bin/omarchy-kids-videos', 'little-screen', ['little screen', 'my videos', 'videos']),
     ]:
         if Path(binary).is_file():
             apps[key] = {'label': label, 'argv': [binary], 'classes': [cls], 'aliases': aliases}

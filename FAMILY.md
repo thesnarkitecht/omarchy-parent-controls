@@ -1,10 +1,10 @@
-# Parent Controls, now with voice and Little Screen
+# Parent Controls, now with voice and Videos
 
 This is the **0.5.0-alpha.7 preview release**. It includes URL-first approvals, a managed Hermes coding sandbox, encrypted remote parent controls, and temporary pairing codes. Physical school-machine and iPhone acceptance remains pending.
 
 ## What belongs where
 
-- **This repository**: the Omarchy plugin, the privileged approval broker, the private remote relay, Little Screen, child requests, and the integrated voice module in `voice/`.
+- **This repository**: the Omarchy plugin, the privileged approval broker, the private remote relay, Videos, child requests, and the integrated voice module in `voice/`.
 - **Parent Pocket**: a separate native iOS project for parents, supplied separately. It connects to the plugin on each school computer; its source is not included here.
 - **Laya Control**: the separate decision service on the shared host, supplied separately; its source is not included here. It suggests bounded actions; it cannot execute desktop commands or approve requests.
 
@@ -14,13 +14,13 @@ Open Parent Pocket and unlock with Face ID, Touch ID, or the device passcode. Ch
 
 In Controls, tap **Paste a link · allow an app**. Paste the web-app URL; its name is optional. The page explains that approval covers the exact hostname, and the pasted page becomes its starting page. Bare hostnames gain `https://`; insecure schemes, embedded credentials and local addresses are rejected. Repeat pastes update the name without duplicating the same starting URL. No app installation is triggered by a website approval.
 
-The Little Screen tab lets a parent add or remove individual YouTube video links. Video titles are optional too. The Controls tab also manages voice and wake-word settings. Pairing credentials stay in the iPhone Keychain, are excluded from migration to another device, and never go to Laya. The app locks when backgrounded.
+The Videos tab lets a parent add or remove individual YouTube video links. Video titles are optional too. The Controls tab also manages voice and wake-word settings. Pairing credentials stay in the iPhone Keychain, are excluded from migration to another device, and never go to Laya. The app locks when backgrounded.
 
 The app refreshes while open and supports pull to refresh. **Background push notifications are not implemented.** The school computer must be awake and reachable; requests are not queued as delayed remote commands. Child requests themselves persist on the computer until reviewed.
 
 ## The girls' experience
 
-Little Screen is an app on their normal Omarchy desktop. Its entire library consists of individual parent-approved video IDs. There is no discovery feed, recommendations, channel approval, playlist approval, next-video autoplay, or general browser inside the app. Playback opens a dedicated player, and the app checks approval immediately before playing and every two seconds afterward. Revocation or loss of the approval service stops playback. Availability depends on YouTube and the installed player/extractor; restricted, removed or unsupported videos may not play.
+Videos is an app on their normal Omarchy desktop. Its entire library consists of individual parent-approved video IDs. There is no discovery feed, recommendations, channel approval, playlist approval, next-video autoplay, or general browser inside the app. Playback opens a dedicated player, and the app checks approval immediately before playing and every two seconds afterward. Revocation or loss of the approval service stops playback. Availability depends on YouTube and the installed player/extractor; restricted, removed or unsupported videos may not play.
 
 The request form supports a video, an exact HTTPS website, or an already installed supported school app. Children can select a school app by name. Requests grant no access until approved. A website approval allows the **exact hostname** shown, not just one page; redirects and login hosts need separate approval. App approvals do not install software.
 
@@ -36,7 +36,7 @@ From the reviewed `omarchy-parent-controls` source directory:
 bash install.sh
 ```
 
-Existing parent settings survive. The installer includes Little Screen, `mpv`, `yt-dlp`, QR-code support and bubblewrap. The outbound connector is installed and is enabled when a parent pairs a phone after relay activation.
+Existing parent settings survive. The installer includes Videos, `mpv`, `yt-dlp`, QR-code support and bubblewrap. The outbound connector is installed and is enabled when a parent pairs a phone after relay activation.
 
 To install and approve terminal Hermes on a machine that does not have it yet, use `bash install.sh --with-hermes`. You can combine this with the voice-pairing option below. The program runtime is installed from the pinned, checksum-verified upstream installer under root ownership.
 
@@ -66,7 +66,7 @@ On a supervised Omarchy test installation, run `python3 tests/integration_hermes
 
 The new managed connection requires the protocol-v2 Parent Pocket build and an activated relay deployment. See [deployment status](docs/REMOTE-ACCESS.md); it is included in alpha.7.
 
-1. On the laptop, open the lock icon and choose **Pair parent phone**.
+1. On the laptop, open the lock icon and choose `omarchy-parent-controls pair`.
 2. Enter the parent PIN. Type the displayed code into Parent Pocket on your iPhone or iPhone Simulator. Scanning its QR is optional.
 3. The connection starts automatically and reconnects when the laptop comes online. No VPN, port forwarding, domain purchase, or per-laptop URL setup.
 
@@ -82,7 +82,7 @@ Revoke all phones with `omarchy-parent-controls unpair`, then pair again. The re
 
 The model is an interpreter, not a security boundary. Local checks reject disallowed commands, re-read approvals before desktop execution, and keep privileged parent operations out of the voice vocabulary. Initial live Laya probes showed that labels need task descriptions and that raw model predictions can be wrong; the final bounded pipeline passed the included five text cases. That is a small regression check, not a child-speech accuracy benchmark.
 
-This release does **not** add a general screenshot-driven browser/computer agent or custom model training. Those need separate task-specific evaluation. The managed Hermes sandbox has passed isolated ARM Omarchy VM checks; physical hardware acceptance remains pending. Little Screen is a restricted app, not a machine-wide guarantee against arbitrary code or every alternate video client.
+This release does **not** add a general screenshot-driven browser/computer agent or custom model training. Those need separate task-specific evaluation. The managed Hermes sandbox has passed isolated ARM Omarchy VM checks; physical hardware acceptance remains pending. Videos is a restricted app, not a machine-wide guarantee against arbitrary code or every alternate video client.
 
 ## Validation
 
